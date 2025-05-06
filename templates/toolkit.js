@@ -16,7 +16,12 @@ function getBackgroundImageUrl(elem){
 
 function printJson(data) {
     console.log(data);
-    console.log(JSON.stringify(data).replaceAll("'ill", ' will').replaceAll("'", '\\"'));
+    console.log(
+        JSON.stringify(data)
+            .replaceAll("'ill", ' will')
+            .replaceAll("'", '\\\\"')
+            .replaceAll('\\"', '\\\\"')
+        );
 }
 
 // ++============================================++

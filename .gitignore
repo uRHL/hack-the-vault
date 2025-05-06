@@ -2,3 +2,10 @@ venv
 .idea
 __pycache__
 conf.json
+
+# Ignore generated documentation
+docs/_build
+docs/_static
+docs/_templates
+docs/Makefile
+docs/make.bat

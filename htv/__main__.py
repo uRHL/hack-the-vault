@@ -6,32 +6,30 @@ import utils as _u
 import argparse
 
 
-"""
-HTB-toolkit is designed to create and manage an structured vault for your notes.
-The vault can be opened with any text editor (Obsidian, VScode, ...) since it is just a directory with markdown files. 
-"""
+def init_mode() -> int:
+    """Init and/or reset the vault
 
-
-def init_mode(path: str | _u.Path, reset: bool = False) -> int:
-    """
-
-    :param path: Path for the vault
-    :param reset: If True, and the vault already exists, the vault is deleted and reset to initial state
     :return: 0 if vault initialized successfully. 1 otherwise
     """
-    return _r.HtbVault(path).makedirs(reset=reset)
+    return _r.HtbVault(ARGS.root_dir).makedirs(reset=ARGS.reset)
 
 
-def add_mode(res: _r.HtbResource | list[_r.HtbResource]) -> int:
-    """
+def add_mode() -> int:
+    """Add resource(s) to the vault
 
-    :param res: HtbResource or list of them to be added.
     :return: 0 on success. 1 on error
     """
-    return _r.HtbVault().add_resources(res)
+    if ARGS.json_data is None:
+        return _r.HtbVault().add_resources(ARGS.t)
+    else:  # Add resource from json data
+        return _r.HtbVault().add_resources(_r.load(ARGS.json_data))
 
 
-def rm_mode(*args, confirm: bool = True) -> int:
+def rm_mode() -> int:
+    """Remove resource(s) from the vault
+
+    :return: 0 on success. 1 otherwise
+    """
     def confirm_prompt():
         while True:
             value = input('> Confirm deletion? [y/N] ').lower()
@@ -39,87 +37,100 @@ def rm_mode(*args, confirm: bool = True) -> int:
                 print(f"[-] Deletion cancelled")
                 return False
             elif value in ['y', 'yes']:
-                print(f"[+] Deleting resources: {args}")
+                print(f"[+] Deleting resources: {ARGS.targets}")
                 return True
             else:
                 print(f"> Please answer y/n")
-    if confirm and not confirm_prompt(): # Operation cancelled
+    if ARGS.y and not confirm_prompt(): # Ir confirm requested but not accepted, cancel operation
         return 0
 
-    if 'VAULT' in args:
+    if 'VAULT' in ARGS.targets:
         print(f"[*] CAUTION: Deleting the entire vault")
         if confirm_prompt():
             return _r.HtbVault().removedirs()
             # shutil.rmtree(_u.CONF['VAULT_DIR'])
         return 0
-    return _r.HtbVault().remove_resources(*args)
+    return _r.HtbVault().remove_resources(*ARGS.targets)
 
 
-def list_mode(*args, name_regex: str = None) -> int:
+def list_mode() -> int:
+    """List resource(s) from the vault
+
+    :return: 0 on success. 1 otherwise
     """
-
-        :param args: resource types (short or long name)
-        :param name_regex: regex applied on the resource name
-        :return:
-        """
-    _r.HtbVault().list_resources(*args, name_regex=name_regex)
+    _r.HtbVault().list_resources(*ARGS.categories, name_regex=ARGS.name)
     return 0
 
 
-def use_mode(*args) -> int:
-    """
+def use_mode() -> int:
+    """Open resource(s) from the vault
 
-    :param args: Name(s) or ID(s), or list of them, indicating which resources should be opened
-    :return: A HtbResource if the specified resource exists. Otherwise None
+    :return: 0 on success. 1 on error (resource not found)
     """
-    _r.HtbVault().use_resource(*args)
-    return 0
+    if _r.HtbVault().use_resource(*ARGS.target) is None:
+        return 1
+    else:
+        return 0
 
 
 def clean_mode() -> int:
-    """
-    Deletes hidden directories created by text editors, in addition to cached and temp files.
-    `.gitignore` file and `.git` dir are always ignored
+    """Clean-up the vault
+
+    :func:`resources.HtbVault.clean`
+
     :return: 0 on success. 1 if an error occurred
     """
     return _r.HtbVault().clean()
 
 
-def vpn_mode(action: str, target: int | str = None) -> int:
-    """
+def vpn_mode() -> int:
+    """Manage the VPN connection with HTB lab
 
-    :param action: action to be performed with the vpn: start, stop, status
-    :param target: index-based id or vpn file name
     :return: 0 on success. 1 on error
     """
-    if action == 'start':
-        if isinstance(target, int | str):
-            use_mode(target)  # Use the indicated file
-        elif 'DEFAULT_VPN' in _u.CONF:  # Using default configuration
-            # print(f"[*] Using default VPN configuration")
-            use_mode(_u.CONF['DEFAULT_VPN'])
-        else:
-            try:  # get first match
-                use_mode(_u.CONF['VAULT_DIR'].glob('**/*.ovpn')[0])
+    if ARGS.action == 'list':
+        ARGS.categories = ['vpn']
+        return list_mode()
+    elif ARGS.action == 'start':
+        if isinstance(ARGS.target, list):
+            ARGS.target = ARGS.target.pop()  # Use the indicated file
+        elif ARGS.target is None or len(ARGS.target) == 0:  # VPN not specified, get first match
+            try:
+                ARGS.target = _u.CONF['VAULT_DIR'].glob('**/*.ovpn')[0]
             except IndexError:
                 print("[!] VPN configurations not found. Download them from HTB page and save into 'vpn/' dir")
                 return 1
-        return _u.CONF['_VPN'].start()
+        elif 'DEFAULT_VPN' in _u.CONF:  # Using default configuration
+            # print(f"[*] Using default VPN configuration")
+            ARGS.target = _u.CONF['DEFAULT_VPN']
+        use_mode()  # Use selected VPN
+        return _u.CONF['_VPN'].start()  # Start selected VPN
     elif '_VPN' not in _u.CONF:
         print(f"[-] VPN not running")
         return 1
-    elif action == 'stop':
+    elif ARGS.action == 'stop':
         return _u.CONF['_VPN'].stop()
-    elif action == 'status':
+    elif ARGS.action == 'status':
         return _u.CONF['_VPN'].status()
     else:
         return 1 # Unknown action
 
+
+def version_mode() -> int:
+    """Print banner and version
+
+    :return: 0 on success
+    """
+    print(_u.FsTools.render_template('banner.txt'))
+    print(f"v{_u._c.VERSION}")
+    return 0
+
 ################################################################################3
 
 def _parse_args():
+    """Command-line interface configuration"""
     parser = argparse.ArgumentParser(
-        prog='htb-toolkit',
+        prog='htb-vault',
         description='A simple CLI tool to manage your HTB vault for note taking',
     )
     # Init CLI
@@ -153,7 +164,7 @@ def _parse_args():
     )
     add_cli_group.add_argument(
         '--json-data',
-        help='Resource details, in JSON format. Obtained from htb-toolkit.js'
+        help='Resource details, in JSON format. Obtained from htb-vault.js'
     )
     # Remove CLI
     remove_cli = subparser.add_parser(
@@ -171,7 +182,7 @@ def _parse_args():
         'targets',
         metavar='NAME_ID',
         nargs='+',
-        help='Name(s) or ID(s) of the resource(s) to be removed. To get the ID use the command `htb-toolkit.py list`. Use the name `VAULT` to delete the entire vault'
+        help='Name(s) or ID(s) of the resource(s) to be removed. To get the ID use the command `htb-vault.py list`. Use the name `VAULT` to delete the entire vault'
     )
 
     # LIST CLI
@@ -205,7 +216,7 @@ def _parse_args():
         'target',
         metavar='NAME_ID',
         nargs='+',
-        help='Name or ID of the resource to be opened. To get the ID use the command `htb-toolkit list`'
+        help='Name or ID of the resource to be opened. To get the ID use the command `htb-vault list`'
     )
 
     # Clean CLI
@@ -233,7 +244,7 @@ def _parse_args():
         metavar='NAME_ID',
         # default=None,
         nargs='*',
-        help='Name or ID of the vpn conf to be opened. To get the ID use the command `htb-toolkit vpn list`. Defaults to value set in the configuration file'
+        help='Name or ID of the vpn conf to be opened. To get the ID use the command `htb-vault vpn list`. Defaults to value set in the configuration file'
     )
     parser.add_argument(
         '-V', '--version',
@@ -248,35 +259,10 @@ if __name__ == '__main__':
     ARGS = _parse_args()
     if _u.CONF['CHECK_UPDATES']:  # Check that dependencies are installed and updated
         _u.check_updates()
-    if ARGS.version:  # Print banner and version
-        print(_u.FsTools.render_template('banner.txt'))
-        print(f"v{_u._c.VERSION}")
-    elif ARGS.mode == 'init':
-        init_mode(ARGS.root_dir, reset=ARGS.reset)
-    elif ARGS.mode == 'add':
-        if ARGS.json_data is None:
-            if ARGS.t is None:
-                _u.FsTools.js_to_clipboard() # Js tools copied to clipboard
-                _u.FileClipboard.set() # Copy object returned by js tools, save and exit
-                add_mode(_r.load(_u.FileClipboard.get())) # Add resource, info from file
-            else:
-                # TODO: if data is not json but a type label, initialize empty resource
-                pass
-        else:  # Add resource from json data
-            add_mode(_r.load(ARGS.json_data))
-    elif ARGS.mode == 'rm':
-        rm_mode(*ARGS.targets, confirm=ARGS.y)
-    elif ARGS.mode == 'list':
-        list_mode(*ARGS.categories, name_regex=ARGS.name)
-    elif ARGS.mode == 'use':
-        use_mode(*ARGS.target)
-    elif ARGS.mode == 'clean':
-        clean_mode()
-    elif ARGS.mode == 'vpn':
-        if ARGS.action == 'list':
-            list_mode('vpn')
-        else:
-            vpn_mode(ARGS.action, ARGS.target.pop())
-    else:
+    if ARGS.version:
+        exit(version_mode())
+    try:
+        exit(eval(f"{ARGS.mode}_mode()"))
+    except NameError:
         print(f"[!] Mode not specified. Use '-h' option to show modes")
-
+        exit(1)

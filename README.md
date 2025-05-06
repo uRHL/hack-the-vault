@@ -1,15 +1,17 @@
-# HTB Vault & toolkit
+# HTB-Vault `HTV`
+
 
 ## Requirements
 
-- `python3 python3-venv openvpn git nano`
+- `python3 python3-venv openvpn git`
+
 
 ## Installation
 
 ```bash
 # 1. Select installation directory
 TOOLS_DIR=$HOME/Documents/00-tools
-REPO_DIR=$TOOLS_DIR"/htb-toolkit"
+REPO_DIR=$TOOLS_DIR"/htb-vault"
 
 # 2. Clone the tool repo
 git clone this.url $REPO_DIR
@@ -19,26 +21,29 @@ python3 -m venv venv                 # Create a virtual environment
 source venv/bin/activate             # Activate the virtual env
 pip install -r requirements          # Install dependencies
 deactivate                           # Dependencies installed, venv may be deactivated now
-chmod a+x $REPO_DIR/htk/__main__.py  # Grant execution permissions
+chmod a+x $REPO_DIR/htv/__main__.py  # Grant execution permissions
 # 4. Create aliases (shortcuts)
-echo 'alias htb-toolkit="source $REPO_DIR/venv/bin/activate && $REPO_DIR/htk/__main__.py"' >> ~/.bashrc
-echo 'alias htk="htb-toolkit"' >> ~/.bashrc
+echo 'alias htb-vault="source $REPO_DIR/venv/bin/activate && $REPO_DIR/htv/__main__.py"' >> ~/.bashrc
+echo 'alias htv="htb-vault"' >> ~/.bashrc
 ```
+
 
 ## Usage
 
 ```bash
 # With aliases created
-htk -h # or htb-toolkit -h
+htv -h # or htb-vault -h
 
 # Without aliases
 source $REPO_DIR/venv/bin/activate
-python3 htk/__main__.py -h
+python3 htv/__main__.py -h
 ```
+
 
 ## Configuration
 
 Configuration file (`$REPO_DIR/conf.json`) contain some configuration parameters like the vault directory or the automatic check of dependencies update. You can change this configuration at any time.
+
 
 ## Vault structure
 HTB vault has the following structure
@@ -136,6 +141,7 @@ htb
 
 ```
 
+
 ## Scope
 
 Right now HTK supports these parsers (JS and Python):
@@ -150,9 +156,8 @@ Right now HTK supports these parsers (JS and Python):
   - [X] Sherlock
   - [X] Track
   - [X] Pro-lab
-  - [ ] Advanced-lab
-      - [X] Fortress
-      - [ ] Battlegrounds
+  - [X] Fortress
+  - [ ] Battlegrounds
 
 
 ## Auto CLI
@@ -182,18 +187,15 @@ modes = dict(
 # inverted = {v: k for k, v in original.items()}
 ```
 
-### TODOs
+---
 
-- Document all values, classes, and functions
-  - [X] constants.py
-  - [ ] __main__.py
-  - [ ] resources.py
-  - [ ] utils.py
-- Remove debug traces, and shit prints
-  - [X] constants.py
-  - [ ] __main__.py
-  - [ ] resources.py
-  - [ ] utils.py
-- Develop test suite to be run with pytest
+## TODOs
+
+- [~] Remove debug traces, and shit prints (REVIEW)
+- [ ] Clean docs
+  - [ ] Draw import sequence diagram
+  - [ ] Complete Class diagram
+  - [ ] Complete class comparison
+- [ ] Develop test suite to be run with pytest
   - Save a copy of each json type returned by js-toolkit
-
+- [ ] Create remote repo or use existing one

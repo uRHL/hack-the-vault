@@ -1,4 +1,4 @@
-import htk
+import htv
 
 class TestResource:
     # TODO: add a pair of modules included in a path before testing the path load
@@ -7,8 +7,8 @@ class TestResource:
     # test rmdirs (assert not exist)
     # TODO: load fixtures
     def test_mod(self):
-        # r = htk.load(fixtures / 'mod_fixture.json')
-        # assert isinstance(r, htk.HtbModule)
+        # r = htv.load(fixtures / 'mod_fixture.json')
+        # assert isinstance(r, htv.HtbModule)
         # r.makedirs()
         # assert exist files
         # r.

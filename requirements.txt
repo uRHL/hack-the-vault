@@ -1,0 +1,5 @@
+# System pkg dependencies: python3 python3-venv openvpn git nano
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+pyperclip==1.9.0
+tqdm==4.67.1

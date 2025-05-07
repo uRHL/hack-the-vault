@@ -3,21 +3,23 @@ from pathlib import Path
 
 __all__ = [
     'ROOT_DIR',
-    'VERSION'
+    'VERSION',
+    'RES_TYPES'
 ]
-"""
-Constants
-"""
+
 #####   C O N S T A N T S   #####
 
 """App version"""
 VERSION = '0.1'
 
+"""All possible types of resource"""
+RES_TYPES = ['mod', 'spt', 'jpt', 'stp', 'mch', 'chl', 'shr', 'trk', 'lab', 'ftr', 'btg', 'vpn']
+
 """Absolute path to repo"""
-ROOT_DIR = Path(__file__).parents[1]
+ROOT_DIR = Path(__file__).parents[2]
 
 """Required system pkg dependencies"""
-DEPENDENCIES = ['python3', 'python3-venv', 'openvpn', 'git', 'nano']  # Required system pkg dependencies
+DEPENDENCIES = ['python3', 'python3-venv', 'openvpn', 'git']  # Required system pkg dependencies
 
 """Default configuration. These keys will always be included"""
 DEFAULT_CONF = dict(

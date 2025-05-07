@@ -1,14 +1,18 @@
-from pathlib import Path
-from tqdm import tqdm
+try:
+    from constants import ROOT_DIR, DEPENDENCIES, RUNTIME_CONF, DEFAULT_CONF
+except ModuleNotFoundError:
+    from .constants import ROOT_DIR, DEPENDENCIES, RUNTIME_CONF, DEFAULT_CONF
+finally:
+    from pathlib import Path
+    from tqdm import tqdm
 
-import constants as _c
-import webbrowser
-import subprocess
-import pyperclip
-import time
-import json
-import os
-import re
+    import webbrowser
+    import subprocess
+    import pyperclip
+    import time
+    import json
+    import os
+    import re
 
 __all__ = [
     'CONF',
@@ -44,6 +48,12 @@ class Cache:
         with open(CONF['_CACHE_PATH'], 'w') as file:
             json.dump([str(i) for i in items], file)
 
+    @staticmethod
+    def clear() -> None:
+        """Clears cache"""
+        if CONF['_CACHE_PATH'].exists():
+            CONF['_CACHE_PATH'].unlink()
+
 class Conf(dict):
     """
     Configuration class. Allows to have a callable runtime instance that read/write the changes to a file.
@@ -56,7 +66,8 @@ class Conf(dict):
         """
         super().__init__()
         self._default = default
-        self.load(**runtime)
+        self._runtime = runtime
+        self.load(**self._runtime)
 
     def _save(self) -> None:
         """Save current configuration
@@ -67,7 +78,7 @@ class Conf(dict):
 
         :return: None
         """
-        with open(_c.ROOT_DIR / 'conf.json', 'w') as file:  # Save changes to disk
+        with open(ROOT_DIR / 'conf.json', 'w') as file:  # Save changes to disk
             _data = {}
             for k, v in self.items():
                 if k.startswith('_'):  # Skip keys starting with '_', they are only used in execution time
@@ -92,7 +103,7 @@ class Conf(dict):
         :return: None
         """
         try:
-            with open(_c.ROOT_DIR / 'conf.json', 'r') as file:
+            with open(ROOT_DIR / 'conf.json', 'r') as file:
                 _data = json.load(file)
             if len(_data) != len(self._default):  # Missing some default keys
                 raise FileNotFoundError
@@ -103,7 +114,7 @@ class Conf(dict):
         else:
             self.update_values(**_data)  # Load saved configuration
         finally:
-            self.update_values(**kwargs)  # Add runtime values
+            self.update_values(**kwargs)  # Add custom parameters
 
     def update_values(self, **kwargs) -> None:
         """Update configuration parameters
@@ -114,8 +125,8 @@ class Conf(dict):
         :return: None
         """
         for k, v in kwargs.items():
-            if isinstance(v, str) and v.find('$') != -1:  # String contains env variables
-                self.__setattr__(f'_{k.lower()}', v)  # Save original value
+            if isinstance(v, str|Path) and str(v).find('$') != -1:  # String contains env variables
+                self.__setattr__(f'_{k.lower()}', str(v))  # Save original value
                 self[k.upper()] = Path(os.path.expandvars(v))  # Expand variables
             else:
                 self[k.upper()] = v
@@ -141,27 +152,10 @@ class Conf(dict):
         """
         print(f"[*] Resetting default config...")
         self.clear()
-        self.update(self._default)  # Default conf values
+        self.update_values(**self._default)  # Default conf values
+        self.update_values(**self._runtime)  # Add runtime parameters
         self._save()
 
-class _FileClipboard:
-    """
-    Static class to use a file as temporary clipboard.
-    """
-    @staticmethod
-    def set():
-        CONF['_CB_PATH'].unlink(missing_ok=True) # Reset clipboard file
-        subprocess.run(['nano', CONF['_CB_PATH']])
-
-    @staticmethod
-    def get():
-        try:
-            with open(CONF['_CB_PATH'], 'r') as file:
-                content = file.read()
-        except FileNotFoundError:
-            return None
-        else:
-            return content
 
 class FsTools:
     """
@@ -194,13 +188,16 @@ class FsTools:
         :return: None
         """
         _prompt = '[*] Use the script in the dev-tools console (F12). Then copy the returned value into the terminal. [Press ENTER to continue]'
+
+        pyperclip.copy(FsTools.render_template('toolkit.js'))
+
         if stdout:
             stdout.write('  [+] JavaScript tools copied to the clipboard')
             stdout.write(f"  {_prompt}")
         else:
             print('[+] JavaScript tools copied to the clipboard')
             input(_prompt)
-        pyperclip.copy(FsTools.render_template('toolkit.js'))
+
 
 
     @staticmethod
@@ -261,16 +258,21 @@ class FsTools:
 
         Search among cached entries and/or the entire vault for a resource.
         If found, its absolute path is returned.
+        Index is between [1, N], where N is the number of cached resources
 
         :param selector: Resource name or cache index
         :return: Path to the resource if found, None otherwise
         """
+
         try:  # Try cache
-            return Cache.get(int(selector) - 1)
+            if isinstance(selector, int) and selector < 1:  # Index provided but out of bounds
+                raise IndexError
+            else:
+                return Cache.get(int(selector) - 1)
         except IndexError:  # Index provided, but out of bounds
             print(f"[-] Index {selector} does not exist. Run command `list` again.")
             return None
-        except TypeError:  # Not an index, try string search
+        except ValueError:  # Not an index, try string search
             _tgs = list(CONF['VAULT_DIR'].glob(f"**/{str(selector).lower()}"))
             if len(_tgs) == 1:
                 return _tgs[0]
@@ -290,31 +292,34 @@ def open_browser_tab(url, quiet: bool = True, delay: int = 0) -> None:
     """
     time.sleep(delay)
     if quiet:
-        os.system('python3 -c "import webbrowser;webbrowser.open_new_tab(\'' + url + '\')" > /dev/null &')
+        os.system('python3 -c "import webbrowser;webbrowser.open_new_tab(\'' + url + '\')" &> /dev/null &')
     else:
         webbrowser.open_new_tab(url)
     time.sleep(delay)
 
-def check_updates() -> None:
+def check_updates() -> int:
     """Check for dependencies updates
 
     Check for updates of the required dependencies which are listed in constants.DEPENDENCIES
 
-    :return: None
+    :return: 0 if dependencies are updated successfully. 1 if update failed. 2 if operation canceled
     """
     # TODO: run pip install -U -r requirements.txt
     print(f"[*] Checking for updates...")
     try:
         subprocess.run('sudo apt update', capture_output=True, shell=True, check=True)
-        subprocess.run(f"sudo apt upgrade {' '.join(_c.DEPENDENCIES)}", shell=True, check=True)
+        subprocess.run(f"sudo apt upgrade {' '.join(DEPENDENCIES)}", shell=True, check=True)
     except KeyboardInterrupt:
         print("[!] Update cancelled")
+        return 2
     except subprocess.CalledProcessError:
         print("[!] Error updating dependencies")
+        return 1
     else:
         print(f"[+] Dependencies updated successfully")
+        return 0
 
 #####   D Y N A M I C   V A L U E S   #####
 
 """Dynamic configuration"""
-CONF = Conf(runtime=_c.RUNTIME_CONF,default=_c.DEFAULT_CONF)
+CONF = Conf(runtime=RUNTIME_CONF,default=DEFAULT_CONF)

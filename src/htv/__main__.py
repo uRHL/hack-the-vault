@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import resources as _r
-import utils as _u
-import argparse
+try:
+    from utils import CONF, FsTools, check_updates
+    from constants import VERSION, RES_TYPES
+    from resources import HtbVault, load
+except ModuleNotFoundError:
+    from .utils import CONF, FsTools, check_updates
+    from .constants import VERSION, RES_TYPES
+    from .resources import HtbVault, load
+finally:
+    import argparse
 
 
 def init_mode() -> int:
@@ -11,7 +18,7 @@ def init_mode() -> int:
 
     :return: 0 if vault initialized successfully. 1 otherwise
     """
-    return _r.HtbVault(ARGS.root_dir).makedirs(reset=ARGS.reset)
+    return HtbVault(ARGS.root_dir).makedirs(reset=ARGS.reset)
 
 
 def add_mode() -> int:
@@ -20,9 +27,9 @@ def add_mode() -> int:
     :return: 0 on success. 1 on error
     """
     if ARGS.json_data is None:
-        return _r.HtbVault().add_resources(ARGS.t)
+        return HtbVault().add_resources(ARGS.t)
     else:  # Add resource from json data
-        return _r.HtbVault().add_resources(_r.load(ARGS.json_data))
+        return HtbVault().add_resources(load(ARGS.json_data))
 
 
 def rm_mode() -> int:
@@ -47,10 +54,10 @@ def rm_mode() -> int:
     if 'VAULT' in ARGS.targets:
         print(f"[*] CAUTION: Deleting the entire vault")
         if confirm_prompt():
-            return _r.HtbVault().removedirs()
-            # shutil.rmtree(_u.CONF['VAULT_DIR'])
+            return HtbVault().removedirs()
+            # shutil.rmtree(CONF['VAULT_DIR'])
         return 0
-    return _r.HtbVault().remove_resources(*ARGS.targets)
+    return HtbVault().remove_resources(*ARGS.targets)
 
 
 def list_mode() -> int:
@@ -58,7 +65,7 @@ def list_mode() -> int:
 
     :return: 0 on success. 1 otherwise
     """
-    _r.HtbVault().list_resources(*ARGS.categories, name_regex=ARGS.name)
+    HtbVault().list_resources(*ARGS.categories, name_regex=ARGS.name)
     return 0
 
 
@@ -67,7 +74,7 @@ def use_mode() -> int:
 
     :return: 0 on success. 1 on error (resource not found)
     """
-    if _r.HtbVault().use_resource(*ARGS.target) is None:
+    if HtbVault().use_resource(*ARGS.target) is None:
         return 1
     else:
         return 0
@@ -80,7 +87,7 @@ def clean_mode() -> int:
 
     :return: 0 on success. 1 if an error occurred
     """
-    return _r.HtbVault().clean()
+    return HtbVault().clean()
 
 
 def vpn_mode() -> int:
@@ -96,22 +103,22 @@ def vpn_mode() -> int:
             ARGS.target = ARGS.target.pop()  # Use the indicated file
         elif ARGS.target is None or len(ARGS.target) == 0:  # VPN not specified, get first match
             try:
-                ARGS.target = _u.CONF['VAULT_DIR'].glob('**/*.ovpn')[0]
+                ARGS.target = CONF['VAULT_DIR'].glob('**/*.ovpn')[0]
             except IndexError:
                 print("[!] VPN configurations not found. Download them from HTB page and save into 'vpn/' dir")
                 return 1
-        elif 'DEFAULT_VPN' in _u.CONF:  # Using default configuration
+        elif 'DEFAULT_VPN' in CONF:  # Using default configuration
             # print(f"[*] Using default VPN configuration")
-            ARGS.target = _u.CONF['DEFAULT_VPN']
+            ARGS.target = CONF['DEFAULT_VPN']
         use_mode()  # Use selected VPN
-        return _u.CONF['_VPN'].start()  # Start selected VPN
-    elif '_VPN' not in _u.CONF:
+        return CONF['_VPN'].start()  # Start selected VPN
+    elif '_VPN' not in CONF:
         print(f"[-] VPN not running")
         return 1
     elif ARGS.action == 'stop':
-        return _u.CONF['_VPN'].stop()
+        return CONF['_VPN'].stop()
     elif ARGS.action == 'status':
-        return _u.CONF['_VPN'].status()
+        return CONF['_VPN'].status()
     else:
         return 1 # Unknown action
 
@@ -121,8 +128,8 @@ def version_mode() -> int:
 
     :return: 0 on success
     """
-    print(_u.FsTools.render_template('banner.txt'))
-    print(f"v{_u._c.VERSION}")
+    print(FsTools.render_template('banner.txt'))
+    print(f"v{VERSION}")
     return 0
 
 ################################################################################3
@@ -159,7 +166,7 @@ def _parse_args():
     add_cli_group = add_cli.add_mutually_exclusive_group()
     add_cli_group.add_argument(
         '-t',
-        choices=list(_r.RES_BY_TYPE.keys()),
+        choices=list(RES_TYPES),
         help="Type of resources to be added. If not specified it will be deduced from json data",
     )
     add_cli_group.add_argument(
@@ -189,7 +196,7 @@ def _parse_args():
     list_cli = subparser.add_parser(
         name='list',
         description='Shows local HTB resources (modules, machines, VPNs). '
-             f"Resource categories: {', '.join(_r.RES_BY_TYPE.keys())}",
+             f"Resource categories: {', '.join(RES_TYPES)}",
         help='Shows local HTB resources (modules, machines, VPNs)'
     )
     list_cli.add_argument(
@@ -201,7 +208,7 @@ def _parse_args():
         'categories',
         metavar='CAT',
         nargs='*',
-        # choices=[*_r.BY_TYPE.keys(), 'all'],
+        # choices=[*RES_BY_TYPE.keys(), 'all'],
         help="Type of resources to be listed. Use 'all' to list everything (default)",
         default=['all']
     )
@@ -257,10 +264,11 @@ def _parse_args():
 
 if __name__ == '__main__':
     ARGS = _parse_args()
-    if _u.CONF['CHECK_UPDATES']:  # Check that dependencies are installed and updated
-        _u.check_updates()
+    if CONF['CHECK_UPDATES']:  # Check that dependencies are installed and updated
+        check_updates()
     if ARGS.version:
-        exit(version_mode())
+        ARGS.mode = 'version'
+
     try:
         exit(eval(f"{ARGS.mode}_mode()"))
     except NameError:

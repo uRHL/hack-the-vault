@@ -1,34 +1,27 @@
-import utils as _u
-import subprocess
-import shutil
-import copy
-import json
-import tqdm
-import os
-import re
+try:
+    from utils import CONF, FsTools, Path, open_browser_tab, Cache
+    from constants import RES_TYPES
+except ModuleNotFoundError:
+    from .utils import CONF, FsTools, Path, open_browser_tab, Cache
+    from .constants import RES_TYPES
+finally:
+    from tqdm import tqdm
+
+    import subprocess
+    import shutil
+    import copy
+    import json
+    import os
+    import re
 
 __all__ = [
     'load', 'HtbVault', 'VpnClient',
     'HtbModule', 'HtbPath', 'SkillPath', 'JobRolePath',
-    'HtbMachine', 'StartingPointMachine', 'LabMachine', 'ChallengeMachine', 'SherlockMachine',
+    'HtbLabResource', 'StartingPointMachine', 'Machine', 'ChallengeMachine', 'SherlockMachine',
     'MachineTrack', 'ProLabMachine', 'MachineFortress', 'MachineBattleground'
 ]
 
-# Resource types, full-names and default paths
-RES_BY_TYPE = {
-        'mod': {'name': 'module', 'path': _u.CONF['VAULT_DIR'] / 'academy/modules'},
-        'spt': {'name': 'skill-path',  'path': _u.CONF['VAULT_DIR'] /'academy/paths/skill-paths'},
-        'jpt': {'name': 'job-role-path', 'path': _u.CONF['VAULT_DIR'] /'academy/paths/job-role-paths'},
-        'stp': {'name': 'starting-point', 'path': _u.CONF['VAULT_DIR'] /'lab/starting-point'},
-        'mch': {'name': 'machine', 'path': _u.CONF['VAULT_DIR'] /'lab/machines'},
-        'chl': {'name': 'challenge', 'path': _u.CONF['VAULT_DIR'] /'lab/challenges'},
-        'shr': {'name': 'sherlock', 'path': _u.CONF['VAULT_DIR'] /'lab/sherlocks'},
-        'trk': {'name': 'track', 'path': _u.CONF['VAULT_DIR'] /'lab/tracks'},
-        'lab': {'name': 'pro-lab', 'path': _u.CONF['VAULT_DIR'] /'lab/pro-labs'},
-        'ftr': {'name': 'fortress', 'path': _u.CONF['VAULT_DIR'] /'lab/fortress'},
-        'btg': {'name': 'battleground', 'path': _u.CONF['VAULT_DIR'] /'lab/battlegrounds'},
-        'vpn': {'name': 'vpn', 'path': _u.CONF['VAULT_DIR'] / 'vpn'}
-    }
+__resources__ = dict()
 
 #######  A U X   C L A S S E S  ####################
 
@@ -59,7 +52,7 @@ class About:
             if key == 'targets' and isinstance(value, list):
                 for val in value:
                     if isinstance(val, dict):
-                        m = LabMachine()
+                        m = Machine()
                         m.info.update(val.pop('info'))
                         # m.about.update(val.pop('about'))
                         self.targets.append(m)
@@ -97,8 +90,8 @@ class Info:
         self.status = None
         self.logo = None
         self.os = None
-        self.authors = list[str]
-        self.tags = list[str]
+        self.authors = list()
+        self.tags = list()
         self.points = None
 
     @property
@@ -113,7 +106,7 @@ class Info:
 
     @name.setter
     def name(self, value):
-        self._name = _u.FsTools.secure_dirname(value)
+        self._name = FsTools.secure_dirname(value)
 
     def update(self, data) -> None:
         """Update Info attributes
@@ -188,33 +181,36 @@ class Section:
     :ivar name: [str] Secured file name (:func:`utils.FsTools.secure_filename`)
 
     """
-    def __init__(self, _type, title):
+    def __init__(self, _type, name):
         """Initializes a Section instance
 
         :param _type: Type of section (interactive, document)
-        :param title: Section title, may contain spaces
+        :param name: Section title, may contain spaces
         """
         self.type = str(_type)
-        self.title = str(title).strip()
-        self.name = _u.FsTools.secure_filename(self.title)
+        self.title = str(name).strip()
+        self.name = FsTools.secure_filename(self.title)
 
     def to_dict(self) -> dict:
         """
 
         :return: dict representation of this Section
         """
-        return dict(_type=self.type, title=self.title)
+        return dict(_type=self.type, name=self.title)
 
 class HtbResource:
     """
     Dataclass representing a generic HtbResource.
     This class is the parent of all resource types that can be found in HTB
 
-    :ivar type: [str] Resource type ID (short-name). Possible values :attr:`RES_BY_TYPE`
+    :cvar __resource_dir__: [Path] Location for these resources within the vault (relative path)
+    :ivar type: [str] Resource type ID (short-name). Possible values :func:`RES_BY_TYPE`
     :ivar info: [:class:`Info`]: Common resource information
     :ivar about: [:class:`About`]: Extra information about the resource
-
     """
+
+    __resource_dir__ = Path()  # E.g. academy/modules
+
     def __init__(self, res_type: str = None):
         """Initializes a HtbResource instance
 
@@ -228,12 +224,12 @@ class HtbResource:
 
     @property
     def type(self) -> str:
-        """Type of resource. Possible values :attr:`RES_BY_TYPE`"""
+        """Type of resource. Possible values :func:`RES_BY_TYPE`"""
         return self._type
 
     @type.setter
     def type(self, value):
-        if value in RES_BY_TYPE:
+        if value in RES_TYPES:
             self._type = value
         else:
             raise ValueError(f"Unknown resource type '{value}'")
@@ -241,15 +237,28 @@ class HtbResource:
     @property
     def type_name(self):
         """Resource type full-name"""
-        return RES_BY_TYPE[self.type]['name']
+        return self.__resource_dir__.name
 
     @property
-    def path(self) -> _u.Path:
+    def path(self) -> Path:
         """Absolute path of this resource"""
-        return RES_BY_TYPE[self.type]['path'] / self.info.name
+        return CONF['VAULT_DIR'] / self.__resource_dir__ / self.info.name
+
+    def list_resources(self, regex: str = None) -> list:
+        """List resources of this type
+
+        :param regex: Regex to be applied on the resource name to filter the results. If None, no filtering
+        :return: A list with the resources found in local vault
+        """
+        regex = '*' if regex is None else f"*{regex}*"
+        return load(list((CONF['VAULT_DIR'] / self.__resource_dir__).glob(regex)))
+
 
     def __repr__(self) -> str:
-        return f"{self.type_name}({self.info.name})"
+        return re.sub("(<class '|'>)", '', str(self.__class__)) + f"({self.info.name})"
+
+    def __str__(self) -> str:
+        return self.info.name
 
     def to_dict(self) -> dict:
         """
@@ -257,7 +266,7 @@ class HtbResource:
         :return: dict representation of this HtbResource
         """
         return {
-            '_type': self.type_name, # convert to full-name string
+            '_type': self.type,
             'info': self.info.to_dict(),
             'about': self.info.to_dict(),
         }
@@ -288,7 +297,7 @@ class HtbResource:
 
         :return: None
         """
-        _u.open_browser_tab(self.info.url)
+        open_browser_tab(self.info.url)
         # TODO: open text editor, open VBox manager
         # IF text editor already opened, pass
         # If Vbox already opened, pass
@@ -297,31 +306,49 @@ class VpnClient:
     """
     Dataclass representing a configuration for OpenVpn.
 
+    :cvar __resource_dir__: [Path] Location for these resources within the vault (relative path)
     :ivar protocol: [str] Protocol configured in the vpn file (tcp or udp)
     :ivar port: [int] Port configured in vpn file. Normally 443 for tcp and 1337 for udp
     :ivar remote: [str] Full string of the remote server configured in the vpn file.
 
     """
-    def __init__(self, path: str | _u.Path):
+    __resource_dir__ = Path('vpn')
+
+    @staticmethod
+    def list_resources(regex: str = None) -> list:
+        """List VPN resources
+
+        :param regex: Regex to be applied on the resource name to filter the results. If None, no filtering
+        :return: A list with the resources found in local vault
+        """
+        regex = '*' if regex is None else f"*{regex}*"
+        return [VpnClient(f) for f in (CONF['VAULT_DIR'] / VpnClient.__resource_dir__).glob(f"{regex}.ovpn")]
+
+
+    def __init__(self, path: str | Path = None):
         """Initializes a VpnClient instance
 
         Initializes a VpnClient from a file. If path is not absolute,
         the file will be searched withing the vpn dir (htb-vault/vpn)
+        If path is None, an instance with default values will be created
 
         :param path: path to vpn configuration file.
 
         """
         self._proc = None  # Process running the open-vpn client
-        self._log_path = _u.CONF['_LOG_PATH']  # Path to log file (Value read from `CONF`)
+        self._log_path = CONF['_LOG_PATH']  # Path to log file (Value read from `CONF`)
         self._path = None
         self.protocol = None  # (tcp, udp)
         self.port = None  # (tcp -> 443, udp -> 1337)
         self.remote = None
 
+        if path is None:
+            return # Do not initialize rest of values
+
         if path.is_absolute():
             self.path = path
         else:
-            self.path = _u.CONF['VAULT_DIR'] / f"vpn/{path}"
+            self.path = CONF['VAULT_DIR'] / f"vpn/{path}"
 
         with open(self.path, 'r') as conf_file:  # Read config file
             lines = conf_file.readlines()
@@ -334,6 +361,11 @@ class VpnClient:
                 raise ValueError
         except (IndexError, ValueError):
             raise ValueError(f"VPN file syntax not recognized '{path}'")
+
+    @property
+    def type_name(self):
+        """Resource type full-name"""
+        return self.__resource_dir__.name
 
     @property
     def country(self) -> str:
@@ -356,17 +388,17 @@ class VpnClient:
     @property
     def server_id(self) -> int:
         """Server id provided by HTB"""
-        return int(re.search('\d+', self.remote)[0])
+        return int(re.search(r'\d+', self.remote)[0])
 
     @property
-    def path(self) -> _u.Path:
+    def path(self) -> Path:
         """Path to VPN configuration file"""
         return self._path
 
     @path.setter
-    def path(self, value: _u.Path):
+    def path(self, value: Path):
         if value.name.endswith(".ovpn") and value.exists():
-            self._path = _u.Path(value)
+            self._path = Path(value)
         else:
             raise ValueError('Not a VPN configuration file or does not exist')
 
@@ -381,7 +413,7 @@ class VpnClient:
     def open(self) -> None:
         """Updates the app runtime configuration with this VPN details"""
         # TODO: update DEFAULT_VPN ?
-        _u.CONF.update_values(_VPN=self)
+        CONF.update_values(_VPN=self)
 
     def start(self, force: bool = False) -> int:
         """Starts the vpn using loaded configuration
@@ -392,19 +424,19 @@ class VpnClient:
         :param force: If True and a VPN is already running, it is stopped
         :return: 0 on success. 1 if a VPN is already running
         """
-        if 'CURRENT_VPN' in _u.CONF:
+        if 'CURRENT_VPN' in CONF:
             if force:  # kill running VPN process
                 print('[*] Stopping current VPN...')
-                os.kill(_u.CONF['CURRENT_VPN'], 9)
+                os.kill(CONF['CURRENT_VPN'], 9)
                 self._log_path.unlink()
-                _u.CONF.remove_values('CURRENT_VPN')
+                CONF.remove_values('CURRENT_VPN')
             else:
                 print("[-] A VPN is already running. Stop it to run a new one")
                 return 1
         print(f'[*] Using VPN configuration from {self.path}')
         print(f'[*] Establishing connection...')
         self._proc = subprocess.Popen(f"sudo openvpn {self.path} &> {self._log_path} &", shell=True)
-        _u.CONF.update_values(CURRENT_VPN=self._proc.pid)
+        CONF.update_values(CURRENT_VPN=self._proc.pid)
         print("[+] Connected to VPN")
         return 0
 
@@ -417,7 +449,7 @@ class VpnClient:
         self._proc.kill()
         self._proc = None
         self._log_path.unlink()
-        _u.CONF.remove_values('CURRENT_VPN')
+        CONF.remove_values('CURRENT_VPN')
         return 0
 
     def status(self, quiet: bool = False) -> int:
@@ -445,7 +477,7 @@ class HtbVault:
     It allows to manage the vault, adding/removing/opening resources,
     listing them or initializing/deleting the entire vault
 
-    :ivar path: [`Path`] Path to the vault
+    :ivar _path: [`Path`] Path to the vault. May contain environment variables
     :param path [str|Path]: Path to the vault. If None, the default directory from conf will be used
 
     """
@@ -454,24 +486,32 @@ class HtbVault:
         """Remove resources from the vault
 
         :param args: resource(s) name or index
-        :return: 0 on success
+        :return: The number of resources deleted
         """
-        for res in args:
+        if len(args) == 1:
             try:
-                _t = _u.FsTools.search_res_by_name_id(res)
+                _t = FsTools.search_res_by_name_id(args[0])
                 shutil.rmtree(_t)
                 print(f"[*] Removing {_t.name}")
             except TypeError:
-                print(f"[-] Unknown resource '{res}'")
-                continue
-        print(f"[+] Resource(s) removed successfully")
-        return 0
-
-    def __init__(self, path: str | _u.Path = None):
-        if path is None:
-            self.path = _u.CONF['VAULT_DIR']
+                print(f"[-] Unknown resource '{args[0]}'")
+                return 0
+            else:
+                print(f"[+] Resource(s) removed successfully")
+                return 1
         else:
-            self.path = _u.Path(path)
+            return sum([HtbVault.remove_resources(res) for res in args])
+
+
+    def __init__(self, path: str | Path = None):
+        if path is None:
+            self._path = str(CONF['VAULT_DIR'])
+        else:
+            self._path = str(path)
+
+    @property
+    def path(self):
+        return Path(os.path.expandvars(self._path))
 
     def makedirs(self, reset: bool = False) -> int:
         """Create vault dir structure
@@ -486,15 +526,18 @@ class HtbVault:
             else:
                 print(f"[!] Vault already exists")
                 return 1
-        _u.CONF.update_values(VAULT_DIR=self.path)
-        os.makedirs(self.path, exist_ok=True)
+        CONF.update_values(VAULT_DIR=self._path)  # Update conf to use this vault
+        os.makedirs(self.path, exist_ok=True)  # Create base directory
         os.chdir(self.path)
         os.system('git init --initial-branch=main')  # Initialize repo
-        for t in RES_BY_TYPE.values():  # Create separated directories for each resource type
-            os.makedirs(t['path'])
+        for r in __resources__.values():  # Create separated directories for each resource type
+            os.makedirs(r.__resource_dir__)
         os.makedirs(self.path / 'ctf')
-        _u.FsTools.dump_file(self.path / 'vpn/vpn1.ovpn', 'Download VPN conf file from HTB page\n')
-        _u.FsTools.dump_file(self.path / '.gitignore', 'vpns/\n.obsidian\n')
+        FsTools.dump_file(self.path / '.gitignore', 'vpns/\n.obsidian\n')
+        FsTools.dump_file(
+            self.path / 'vpn/README.txt',
+            'Download VPN conf file (.ovpn extension) from HTB page \n'
+        )
         os.system('git add .')  # Initialize repo
         # TODO: ensure git.config.username and git.config.email are configured
         os.system('git commit -am "Init vault"')  # Initialize repo
@@ -508,21 +551,25 @@ class HtbVault:
         """
         print(f"[!] Deleting the entire vault")
         shutil.rmtree(self.path)
+        CONF.reset()  # Reset configuration so VAULT_DIR points to default location again
         return 0
 
     def clean(self) -> int:
         """Clean-up vault
 
         Deletes hidden directories created by text editors, in addition to cached and temp files.
-        `.gitignore` file and `.git` dir are always ignored.
+        These files/dirs usually start by '.' or '_'. `.gitignore` file and `.git` dir are always excluded.
 
         :return: 0 on success. 1 if an error occurred
         """
         print(f"[*] Cleaning the vault...")
-        for p in self.path.glob('**/.*'):
+        for p in [*self.path.glob('**/.*'), *self.path.glob('**/_*')]:
             if p.name not in ['.git', '.gitignore']:
                 print(f"[*] Deleting {p}")
-                shutil.rmtree(p)
+                if p.is_dir():
+                    shutil.rmtree(p)
+                else:
+                    p.unlink()
         print(f"[+] Vault clean-up completed")
         return 0
 
@@ -535,40 +582,37 @@ class HtbVault:
         """
         try:
             if res is None:
-                _u.FsTools.js_to_clipboard()  # Js tools copied to clipboard
+                FsTools.js_to_clipboard()  # Js tools copied to clipboard
                 self.add_resources(load(input('>  json: ')))  # Add resource, info from stdin
-            elif res in RES_BY_TYPE:
-                # TODO: if data is not json but a type label, initialize empty resource
-                pass
-            elif isinstance(res, HtbResource):
-                stdout.write(f"[*] Adding resource {res}") if stdout else print(f"[*] Adding resource {res}")
-                res.makedirs()
-                stdout.write(f"[+] Resource added {res}") if stdout else print(f"[+] Resource added {res}")
-            else:
-                bar = tqdm.tqdm(res, unit='resource')
+            elif isinstance(res, list):
+                bar = tqdm(res, unit='resource')
                 for item in res:
                     self.add_resources(item, stdout=bar)
                     bar.update(1)
                 print(f"[+] {len(res)} resource(s) added successfully")
+            elif isinstance(res, HtbResource):
+                stdout.write(f"[*] Adding resource {res}") if stdout else print(f"[*] Adding resource {res}")
+                res.makedirs()
+                stdout.write(f"[+] Resource added {res}") if stdout else print(f"[+] Resource added {res}")
+            elif isinstance(res, str) and res in RES_TYPES:
+                # TODO: if data is not json but a type label, initialize empty resource
+                pass
         except ValueError:
             return 1
         else:
             return 0
 
-    def list_resources(self, *args, name_regex: str = None) -> list[_u.Path] | None:
+    def list_resources(self, *args, name_regex: str = None) -> list[Path] | None:
         """List resources from the vault
 
         :param args: resource types :attr:`HtbResource.type`
         :param name_regex: regex applied on the resource name. If None, no filter is applied
         :return: A list with the resources found, or None if no match
         """
-        def filter_by_name():
-            # cast to list to avoid exhausting the generator
-            return list(filter(lambda p: re.search(name_regex, p.name) is not None, results))
 
         def print_ordered(*items):
             _div = '-' * 30
-            header = f"\n{RES_BY_TYPE[rtype]['name'].upper()}"
+            header = f"\n{__resources__[rtype]().type_name.upper()}"
             start = len(res_pool) + 1
             if len(items) > 0:
                 print(f"{header}{'' if name_regex is None else f' (filter: {name_regex})'}\n{_div}")
@@ -576,27 +620,27 @@ class HtbVault:
                       _div, sep='\n')
 
         res_pool = list()
+
+        if not self.path.exists():
+            print(f"[!] Vault not found ({self.path}). Initialize the vault first")
+            return None
+        if len(args) == 0:
+            args = ['all']
+
         for rtype in args:
             if rtype == 'all':  # Recursive call with all existing res types
-                return self.list_resources(*RES_BY_TYPE.keys(), name_regex=name_regex)
-            elif rtype == 'vpn':  # Special case VpnClient
-                results = [VpnClient(f) for f in RES_BY_TYPE[rtype]['path'].glob('*.ovpn')]
-                if name_regex is not None:
-                    results = filter_by_name()
+                return self.list_resources(*RES_TYPES, name_regex=name_regex)
+            elif rtype in RES_TYPES:  # Any other type of HtbResource
+                results = __resources__[rtype]().list_resources(name_regex)
                 print_ordered(*results)
-                res_pool.extend([vpn.path for vpn in results])
-            elif rtype in RES_BY_TYPE:  # Any other type of HtbResource
-                results = list(RES_BY_TYPE[rtype]['path'].glob('*'))  # cast to list to avoid exhausting the generator
-                if name_regex is not None:
-                    results = filter_by_name()
-                print_ordered(*[p.name for p in results])
-                res_pool.extend(results)
+                res_pool.extend([r.path for r in results])
             else:
                 print(f"[-] Unknown resource type '{rtype}'")
 
-        _u.Cache.set(res_pool)
+        Cache.set(res_pool)
         if len(res_pool) == 0:
             print("[-] No search results")
+            res_pool = None
         return res_pool
 
     def use_resource(self, *args) -> HtbResource | VpnClient | list[HtbResource] | None:
@@ -606,7 +650,7 @@ class HtbVault:
         :return: A HtbResource, or a list of them. None if the resource could not be opened
         """
         if len(args) == 1:  # Select single resource, using index or name
-            tg = _u.FsTools.search_res_by_name_id(args[0])
+            tg = FsTools.search_res_by_name_id(args[0])
             # Load the resource file
             if tg.is_file() and tg.name.endswith('.ovpn'):  # Init VpnClient
                 tg = VpnClient(tg)
@@ -645,6 +689,8 @@ class HtbModule(HtbResource):
         'IV': 1000
     }
     COST_TIER = {v: k for k, v in TIER_COST.items()}
+
+    __resource_dir__ = Path('academy/modules')
 
     def __init__(self):
         super().__init__(res_type='mod')
@@ -725,28 +771,28 @@ class HtbModule(HtbResource):
         :return: None
         """
         try:
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
         except FileExistsError:
             print(f"[!] Resource '{self.info.name}' already exists. Only info.json will be updated")
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
         else:
             os.makedirs(self.path / 'resources')
-            _u.FsTools.render_template('module_index.md', self.path / 'index.md', mod=self)
+            FsTools.render_template('module_index.md', self.path / 'index.md', mod=self)
             for ind, section in enumerate(self.sections, 1):  # Create one file per each section
-                _u.FsTools.render_template(
+                FsTools.render_template(
                     'mod_section.md',
                     self.path / f"{f'0{ind}' if ind < 10 else ind}_{section.name}.md",
                     section=section
                 )
 
-    def add_section(self, _type: str, title: str) -> Section:
+    def add_section(self, _type: str, name: str) -> Section:
         """Adds a new section to this module
 
         :param _type: Type of section (interactive / document)
-        :param title: Title of the section. May contain spaces
+        :param name: Title of the section. May contain spaces
         :return: the new :class:`Section` added
         """
-        self.sections.append(Section(_type, title))
+        self.sections.append(Section(_type, name))
         return self.sections[-1]
 
     def remove_section(self, index: int) -> Section:
@@ -767,6 +813,7 @@ class HtbPath(HtbResource):
     :ivar modules: [list[:class:`HtbModule`]] List of modules included in the path
 
     """
+
     def __init__(self, res_type :str =None):
         super().__init__(res_type=res_type)
         self._progress = 0.0
@@ -798,8 +845,8 @@ class HtbPath(HtbResource):
         json_data['cost'] = self.cost
         json_data['duration'] = self.duration
         json_data['sections'] = self.sections
+        json_data['_progress'] = self._progress
         json_data['modules'] = [mod.to_dict() for mod in self.modules]
-
         return json_data
 
     def update(self, **kwargs) -> None:
@@ -830,26 +877,26 @@ class HtbPath(HtbResource):
         :return: None
         """
         try:
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
         except FileExistsError:
             print(f"[!] Resource '{self.info.name}' already exists. Only info.json will be updated")
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
         else:
-            _u.FsTools.render_template('path_index.md', self.path / 'index.md', path=self)
+            FsTools.render_template('path_index.md', self.path / 'index.md', path=self)
             # TODO: Should I create soft link files?
             # os.symlink(f"../../modules/{mod.name}", mod.name, target_is_directory=True)
-            bar = _u.tqdm(self.modules, unit='mod')
+            bar = tqdm(self.modules, unit='mod')
             for mod in self.modules:  # Create soft-links to modules
                 bar.write(f"[*] Adding mod: {mod.info.name}")
                 if not (missing_ok or mod.path.exists()):
                     bar.write(f"  [-] Module not found in local vault")
                     # If module not found locally, request the user to get the info from the web
-                    _u.FsTools.js_to_clipboard(bar)
+                    FsTools.js_to_clipboard(bar)
                     bar.write(f"  [*] Opening module URL and waiting for input")
-                    _u.open_browser_tab(mod.info.url, delay=3)
+                    open_browser_tab(mod.info.url, delay=3)
                     while True:
                         try:
-                            _u.FsTools.js_to_clipboard(bar)
+                            FsTools.js_to_clipboard(bar)
                             # _u.FileClipboard.set()  # Paste clipboard into file, save and exit
                             # load(_u.FileClipboard.get()).makedirs()  # Init module
                             load(input('>  json: ')).makedirs()  # Init module
@@ -861,16 +908,22 @@ class HtbPath(HtbResource):
                 bar.update(1)
 
 class SkillPath(HtbPath):
+
+    __resource_dir__ = Path('academy/paths/skill-paths')
+
     def __init__(self):
         super().__init__(res_type='spt')
 
 class JobRolePath(HtbPath):
+
+    __resource_dir__ = Path('academy/paths/job-role-paths')
+
     def __init__(self):
         super().__init__(res_type='jpt')
 
 #######  H T B   L A B   C L A S S E S  ####################
 
-class HtbMachine(HtbResource):
+class HtbLabResource(HtbResource):
     """**Abstract class** representing a resource from HTB lab
 
     :ivar tasks: [list[:class:`Task`]] List of tasks associated to this resource
@@ -880,7 +933,7 @@ class HtbMachine(HtbResource):
         super().__init__(res_type=res_type)
         self.tasks = list()
 
-    def to_dict(self, path: str | _u.Path = None) -> dict:
+    def to_dict(self, *args, path: str | Path = None) -> dict:
         """
 
         :param path: If provided, write dumps the returned dict into this path
@@ -888,6 +941,9 @@ class HtbMachine(HtbResource):
         """
         json_data = super().to_dict() # Initialize json data
         json_data['tasks'] = [tsk.to_dict() for tsk in self.tasks]  # Add tasks
+        for a in args:  # Add any other custom attribute
+            if hasattr(self, a):
+                json_data[a] = self.__getattribute__(a)
         if path is not None:
             if path.is_dir():
                 with open(path / 'info.json', 'w') as file:
@@ -918,18 +974,21 @@ class HtbMachine(HtbResource):
 
         :return: None
         """
+        if self.info.name in [None, '']:
+            print(f"f[!] Resource has no name ({self.__repr__()})")
+            self.info.name = 'unknown'
         try:
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
         except FileExistsError:
             print(f"[!] Resource '{self.info.name}' already exists. Only info.json will be updated")
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
         else:
             os.makedirs(self.path / 'evidences/screenshots', exist_ok=True)
-            _u.FsTools.dump_file(
+            FsTools.dump_file(
                 self.path / 'sol_pdf.txt',
                 f"Download the solution from the URL: {self.info.url}\n"
             )
-            _u.FsTools.render_template(
+            FsTools.render_template(
                 'writeup.md',
                 self.path / 'writeup.md',
                 resource=self
@@ -960,35 +1019,50 @@ class HtbMachine(HtbResource):
         """
         return self.tasks.pop(index)
 
-class StartingPointMachine(HtbMachine):
+class StartingPointMachine(HtbLabResource):
+
+    __resource_dir__ = Path('lab/starting-point')
+
     def __init__(self):
         super().__init__(res_type='stp')
 
-class LabMachine(HtbMachine):
+class Machine(HtbLabResource):
+
+    __resource_dir__ = Path('lab/machines')
+
     def __init__(self):
         super().__init__(res_type='mch')
 
-class ChallengeMachine(HtbMachine):
+class ChallengeMachine(HtbLabResource):
     """Class representing a Challenge in the HTB lab
 
     :cvar info.logo: [str] 'https://app.hackthebox.com/images/logos/htb_ic2.svg'
     """
+
+    __resource_dir__ = Path('lab/challenges')
+
     def __init__(self):
         super().__init__(res_type='chl')
         self.info.logo = 'https://app.hackthebox.com/images/logos/htb_ic2.svg'
 
-class SherlockMachine(HtbMachine):
+class SherlockMachine(HtbLabResource):
+
+    __resource_dir__ = Path('lab/sherlocks')
+
     def __init__(self):
         super().__init__(res_type='shr')
 
-class MachineTrack(HtbMachine):
+class MachineTrack(HtbLabResource):
     """Class representing a Track in the HTB lab
 
     :ivar tasks: [list[:class:`HtbMachine`]] List of machines (lab machines and challenges) associated to the track
     """
+
+    __resource_dir__ = Path('lab/tracks')
+
     def __init__(self):
         super().__init__(res_type='trk')
-        self.tasks = list[HtbMachine]
+        self.tasks = list[HtbLabResource]
 
     def update(self, **kwargs) -> None:
         """Update this MachineTrack attributes
@@ -1010,14 +1084,17 @@ class MachineTrack(HtbMachine):
         :return: None
         """
         try:
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
         except FileExistsError:
             print(f"[!] Resource '{self.info.name}' already exists. Only info.json will be updated")
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
         else:
-            _u.FsTools.render_template('track_index.md', self.path / 'index.md', track=self)
+            FsTools.render_template('track_index.md', self.path / 'index.md', track=self)
 
-class ProLabMachine(HtbMachine):
+class ProLabMachine(HtbLabResource):
+
+    __resource_dir__ = Path('lab/pro-labs')
+
     def __init__(self):
         super().__init__(res_type='lab')
         self.entry_point = None
@@ -1043,18 +1120,24 @@ class ProLabMachine(HtbMachine):
         :return: None
         """
         try:
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
         except FileExistsError:
             print(f"[!] Resource '{self.info.name}' already exists. Only info.json will be updated")
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
         else:
-            _u.FsTools.render_template('prolab_index.md', self.path / 'index.md', lab=self)
+            FsTools.render_template('prolab_index.md', self.path / 'index.md', lab=self)
             for m in self.about.targets:
                 _tg_path = self.path / f'targets/{m.info.name}'
                 os.makedirs(_tg_path / 'evidences/screenshots', exist_ok=True)
-                _u.FsTools.render_template('basic_writeup.md', _tg_path / 'writeup.md', resource=m)
+                FsTools.render_template('basic_writeup.md', _tg_path / 'writeup.md', resource=m)
 
-class MachineFortress(HtbMachine):
+    def to_dict(self, *args, path: str | Path = None) -> dict:
+        return super().to_dict('entry_point', path=path)
+
+class MachineFortress(HtbLabResource):
+
+    __resource_dir__ = Path('lab/fortresses')
+
     def __init__(self):
         super().__init__(res_type='ftr')
 
@@ -1064,51 +1147,57 @@ class MachineFortress(HtbMachine):
         :return: None
         """
         try:
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=False)
         except FileExistsError:
             print(f"[!] Resource '{self.info.name}' already exists. Only info.json will be updated")
-            _u.FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
+            FsTools.dump_file(self.path / 'info.json', json.dumps(self.to_dict()), exist_ok=True)
         else:
             os.makedirs(self.path / 'evidences/screenshots', exist_ok=True)
-            _u.FsTools.render_template(
+            FsTools.render_template(
                 'writeup.md',
                 self.path / 'writeup.md',
-                resourece=self
+                resource=self
             )
 
-class MachineBattleground(HtbMachine):
+class MachineBattleground(HtbLabResource):
     """Class representing a Battleground in the HTB lab
 
     :raise NotImplementedError
     """
+
+    __resource_dir__ = Path('lab/battlegrounds')
+
     def __init__(self):
         super().__init__(res_type='btg')
-        raise NotImplementedError
+        # TODO: parser not implemented
 
 ############################################################################
 
-def load(data :str | _u.Path | list | dict) -> HtbResource | list[HtbResource] | None:
+# Resource types, full-names and default paths
+__resources__.update({
+        'mod': HtbModule,
+        'spt': SkillPath,
+        'jpt': JobRolePath,
+        'stp': StartingPointMachine,
+        'mch': Machine,
+        'chl': ChallengeMachine,
+        'shr': SherlockMachine,
+        'trk': MachineTrack,
+        'lab': ProLabMachine,
+        'ftr': MachineFortress,
+        'btg': MachineBattleground,
+        'vpn': VpnClient
+    })
+
+def load(data :str | Path | list | dict) -> HtbResource | list[HtbResource] | None:
     """Parses JSON data returned by toolkit.js
 
     :param data: Serialized data. It may be a JSON string/file, a serialized HtbResource (dict) or a list of them (llist[dict])
     :return: the deserialized HtbResource or list of them
     """
-    _builder = {
-        'module': HtbModule,
-        'skill-path': SkillPath,
-        'job-role-path': JobRolePath,
-        'starting-point': StartingPointMachine,
-        'machine': LabMachine,
-        'challenge': ChallengeMachine,
-        'sherlock': SherlockMachine,
-        'track': MachineTrack,
-        'pro-lab': ProLabMachine,
-        'fortress': MachineFortress,
-        'battleground': MachineBattleground
-    }
     if isinstance(data, dict):  # Base case, load a HtbResource from a json
         try:
-            htb_resource = _builder[data.pop('_type')]()
+            htb_resource = __resources__[data.pop('_type')]()
         except KeyError as e:
             print(f"[!] Unknown resource type. {e}")
             return None
@@ -1117,12 +1206,14 @@ def load(data :str | _u.Path | list | dict) -> HtbResource | list[HtbResource] |
             return htb_resource
     elif isinstance(data, list):  # Load several HtbResources
         return [load(item) for item in data]
-    elif isinstance(data, _u.Path) or _u.Path(data).exists():  # Load data from JSON file
+    elif isinstance(data, Path) or Path(data).exists():  # Load data from JSON file
+        if Path(data).is_dir():  # If it is a directory append info.json
+            data = Path(data) / 'info.json'
         try:
             with open(data, 'r') as file:
                 return load(json.load(file))
         except FileNotFoundError:
-            print(f"[-] Not a HtbResource")
+            print(f"[-] Not a HtbResource ({data})")
             return None
     else:  # Load data from JSON string
         return load(json.loads(data))

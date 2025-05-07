@@ -1,12 +1,46 @@
-# HTB-Vault `HTV`
+# HTB-Vault 
+
+![Static Badge](https://img.shields.io/badge/HTB-black?logo=hackthebox)
+![Static Badge](https://img.shields.io/badge/Hack_the_Vault-black)
+![Static Badge](https://img.shields.io/badge/pwn_records-black)
+
+![Static Badge](https://img.shields.io/badge/test_coverage-84%25-blue)
 
 
-## Requirements
 
-- `python3 python3-venv openvpn git`
+
+**HTB-Vault**, abbreviated (**HTV**), is tool to manage your vault of write-ups and notes efficiently.
+
+#### The _goodbook_
+
+As you progress in your path as a hacker, you will learn more and more techniques, technologies, scenarios, ... 
+Knowledge is power, and since human memory sometimes fails, a good _notebook_ can save you tons of time and headaches. HTV helps you to keep this notebook structured and organized so you can get most benefit from it.
+
+#### Save your progress
+
+If you know HTB you should already know Git. Your vault is also a repository, so you can track down changes and save your progress using git. To save the repository in the cloud, just [update the remote repository](#annex-a-updating-remote-repository).
+
+
+#### Sharing knowledge
+
+With this tool you can share your discoveries and achievements by setting up a blog in few minutes using [GitHub pages](https://pages.github.com/). Check out the [tutorial](#annex-b-setting-up-github-pages).
+
+## Index 
+
+1. [About](#the-_goodbook_)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Configuration](#configuration)
+5. [Vault structure](#vault-structure)
+6. [Tests](#tests)
+7. [Annex A: Updating remote repository](#annex-a-updating-remote-repository)
+8. [Annex B: Setting up GitHub pages](#annex-b-setting-up-github-pages)
+
 
 
 ## Installation
+
+> HTV will automatically install the package dependencies with the command `htv -V`. You can also install the dependencies manually: `python3 python3-venv openvpn git`
 
 ```bash
 # 1. Select installation directory
@@ -58,12 +92,6 @@ htb
 │   │   │   ├── 03_direct_prompt_injection.md
 │   │   │   ├── 04_indirect_prompt_injection.md
 │   │   │   ├── 05_introduction_to_jailbreaking.md
-│   │   │   ├── 06_jailbreaks_i.md
-│   │   │   ├── 07_jailbreaks_ii.md
-│   │   │   ├── 08_tools_of_the_trade.md
-│   │   │   ├── 09_traditional_mitigations.md
-│   │   │   ├── 10_llm_based_mitigations.md
-│   │   │   ├── 11_skills_assessment.md
 │   │   │   ├── index.md
 │   │   │   ├── info.json
 │   │   │   └── resources  # Images, videos, files or other resources relevant for the module
@@ -142,60 +170,44 @@ htb
 ```
 
 
-## Scope
+## Tests
 
-Right now HTK supports these parsers (JS and Python):
+To run test and generate coverage report run the following command from the installation dir
 
-- Academy
-  - [X] Module
-  - [X] Path
-- Lab
-  - [X] Starting-point
-  - [X] Machine
-  - [X] Challenge
-  - [X] Sherlock
-  - [X] Track
-  - [X] Pro-lab
-  - [X] Fortress
-  - [ ] Battlegrounds
-
-
-## Auto CLI
-
+```bash
+pytest --cov --cov-report=html:tests/coverage-report
 ```
-my-cli: this is a command line
-    mode1
-        required_param
-        --optional-param (y/N)
-        param_list+ (default)
-        param_list* (default)
-    mode2
-    mode3
-    
-modes = dict(
-    init=init_mode,
-    add=add_mode,
-    rm=rm_mode,
-    list=list_mode,
-    use=use_mode,
-    clean=clean_mode,
-    vpn=vpn_mode
-)
-# modes[m](ARGS)
 
-# Invert dict items keys <-> values
-# inverted = {v: k for k, v in original.items()}
-```
+---
+
+## Annex A: Updating remote repository
+TODO: tutorial here
+
+## Annex B: Setting-up GitHub pages
+TODO: tutorial here
 
 ---
 
 ## TODOs
 
 - [~] Remove debug traces, and shit prints (REVIEW)
+- [ ] Complete pyproject.toml
 - [ ] Clean docs
   - [ ] Draw import sequence diagram
   - [ ] Complete Class diagram
-  - [ ] Complete class comparison
-- [ ] Develop test suite to be run with pytest
-  - Save a copy of each json type returned by js-toolkit
+  - [ ] Complete class comparison 
+- [ ] Review docs (python and README)
+  - [ ] Add section 'Importing/Exporting a vault'
+  - [ ] Add section 'Setup remote repository'
+  - [ ] Add section 'Setup GitHub pages'
+  - [ ] Add section 'Generating docs: how to re-generate docs'
+- [ ] Generate single-file documentation, clean the rest
 - [ ] Create remote repo or use existing one
+
+Right now HTK supports these parsers (JS and Python).
+
+- Implemented
+  - Academy: Module, Path
+  - Lab: Starting-point, Machine, Challenge, Sherlock, Track, Pro-lab, Fortress
+- Not implemented
+  - Lab: Battlegrounds

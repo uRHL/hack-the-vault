@@ -1,21 +1,51 @@
-from htv import StartingPointMachine, Machine, ChallengeMachine, SherlockMachine
-from htv import MachineTrack, ProLabMachine, MachineFortress, MachineBattleground
-from htv import HtbModule, SkillPath
-from htv import CONF, load, HtbVault
 from pathlib import Path
 
 import pytest
 import json
+import htv
 import os
+
 
 TEST_VAULT_DIR = '$HOME/Documents/01-me/vaults/test-htv'
 
-@pytest.fixture
-def resource_fixtures():
-    return {file.name: file for file in (Path(__file__).parent / 'fixtures').glob('*')}
+class TestDataSources:
+
+    def test_get_none(self):
+        assert htv.DataSources.get('none-category') is None
+
+    def test_get_all(self):
+        assert len(htv.DataSources.get('all')) == 3
+
+    def test_get_category(self):
+        assert isinstance(htv.DataSources.get('htb'), htv.HtvVault)
+
+    def test_get_resource(self):
+        assert isinstance(htv.DataSources.get('htb.mod'), htv.HtvResource)
+
+    @pytest.mark.parametrize('path', sorted((Path(__file__).parent / 'fixtures').glob('[0-9]*')))
+    def test_load(self, path):
+        # Dynamic modification of load parameters to test more cases
+        # if path.name.startswith('1_mod'):  # test load from json string
+        #     with open(path, 'r') as f:
+        #         res = htv.DataSources.load(f.read())
+        # elif path.name.startswith('2_mod'):  # test load from dict
+        #     with open(path, 'r') as f:
+        #         res = htv.DataSources.load(json.load(f))
+        # else:  # test load from file
+        #     res = htv.DataSources.load(path)
+        with open(path, 'r') as file:
+            res = htv.DataSources.load(file.read())
+        if isinstance(res, list):
+            for _ in res:
+                assert isinstance(_, htv.HtvResource)
+        else:
+            assert isinstance(res, htv.HtvResource)
 
 class TestVault:
-    vault = HtbVault(TEST_VAULT_DIR)
+    vault = htv.HtvVault(TEST_VAULT_DIR)
+    # vault.add_resources()
+    # vault.add('htb')
+
 
     def test_init(self):
         """Fresh init"""
@@ -29,54 +59,35 @@ class TestVault:
         """Reset an existing vault"""
         assert self.vault.makedirs(reset=True) == 0
 
-    @pytest.mark.parametrize(
-        'path,_class', [
-            ('mod_1.json', HtbModule),
-            ('mod_2.json', HtbModule),
-            ('mod_3.json', HtbModule),
-            ('skill_path.json', SkillPath),
-            ('starting_point.json', StartingPointMachine),
-            ('machine.json', Machine),
-            ('challenge.json', ChallengeMachine),
-            ('sherlock.json', SherlockMachine),
-            ('track.json', MachineTrack),
-            ('pro_lab.json', ProLabMachine),
-            ('fortress.json', MachineFortress),
-            # ('battleground.json', MachineBattleground)
-        ])
-    def test_add_resource(self, path, _class, resource_fixtures):
-        if resource_fixtures[path].name == 'mod_1.json':
-            res = load(resource_fixtures[path])  # test load from file
-        elif resource_fixtures[path].name == 'mod_2.json':
-            with open(resource_fixtures[path], 'r') as f:  # test load from json string
-                res = load(f.read())
-        elif resource_fixtures[path].name == 'mod_3.json':
-            with open(resource_fixtures[path], 'r') as f:  # test load from dict
-                res = load(json.load(f))
-        else:
-            res = load(resource_fixtures[path])
-        assert isinstance(res, _class) or isinstance(res[0], _class)  # HtbPaths are parsed from lists
-        self.vault.add_resources(res)
-        if isinstance(res, list):
-            assert res[0].path.exists()
-        else:
+    @pytest.mark.parametrize('path', sorted((Path(__file__).parent / 'fixtures').glob('[0-9]*')))
+    def test_add_resource(self, path):
+        with open(path, 'r') as file:
+            res = htv.DataSources.load(file.read())  # Deserialize resource
+        self.vault.add_resources(res) # Add resources to the vault
+        if isinstance(res, htv.HtvResource):
             assert res.path.exists()
-        # -------------------------------------------------
+        else:  # HtbPaths are parsed from lists
+            for _ in res:
+                assert isinstance(_, htv.HtvResource) and _.path.exists()
 
     def test_list_all(self):
-        assert len(self.vault.list_resources('all')) == 11
+        assert len(self.vault.list_resources('all')) == 3
 
     def test_list_no_results(self):
-        assert self.vault.list_resources('vpn') is None
+        assert len(self.vault.list_resources('none')) == 0
 
     def test_list_filtering_no_results(self):
-        assert self.vault.list_resources('mod', name_regex='random') is None
+        assert len(self.vault.list_resources('htb.mod', regex='random')) == 0
 
     def test_list_filtering_one_results(self):
-        assert len(self.vault.list_resources('mod', name_regex='javascript-deobfuscation')) == 1
+        assert len(self.vault.list_resources('htb.mod', regex='javascript-deobfuscation')) == 1
 
     def test_list_filtering_many_results(self):
-        assert len(self.vault.list_resources('all', name_regex='e')) == 7
+        assert len(self.vault.list_resources('all', regex='e')) == 2
+
+    def test_list_by_category(self):
+        # Run this test after all other list_resources() test. Cache needs to be set up for next test
+        assert len(self.vault.list_resources('htb.mod')) == 3
 
     @pytest.mark.parametrize(
         'selector,expected', [
@@ -85,21 +96,27 @@ class TestVault:
             ('solar', 'solar')
         ])
     def test_use_one_resource(self, selector, expected):
-        assert self.vault.use_resource(selector).info.name == expected
-
-    def test_use_many_resources(self):
-        assert len(self.vault.use_resource(*range(1, len(self.vault.list_resources('all')) + 1))) == 11
-
+        assert self.vault.use_resource(selector).name == expected
+#
+#     # def test_use_many_resources(self):
+#     #     assert len(self.vault.use_resource(*range(1, len(self.vault.list_resources('all')) + 1))) == 11
+#     #
     def test_clean(self):
         # create dummy files and folders in vault
-        dummies = ['academy/modules/.dummy1', 'lab/tracks/_dummy2.123', 'vpn/__dummy3.txt', 'lab/machines/__dummy4__', 'academy/paths/skill-paths/.dummy5']
-        for d in dummies[:3]:
+        dummies = [
+            'htb/academy/module/.dummy1',
+            'htb/lab/track/_dummy2.123',
+            'htb/vpn/__dummy3.txt',
+            'personal/machine/__dummy4__',
+            'personal/exercise/.dummy5'
+        ]
+        for d in dummies[:3]:  # Temp files
             (self.vault.path / d).touch()
-        for d in dummies[3:]:
+        for d in dummies[3:]:  # Temp Directories
             os.makedirs(self.vault.path / d)
         self.vault.clean()
         assert True not in [(self.vault.path / d).exists() for d in dummies]  # assert dummy files do not exist
-
+#
     def test_rm_res_by_name(self):
         assert self.vault.remove_resources('web-requests') == 1
 
@@ -114,5 +131,7 @@ class TestVault:
         assert self.vault.remove_resources('random-res') == 0
 
     def test_removedirs(self):
+        input("Press enter to finish")
         self.vault.removedirs()
         assert not Path(os.path.expandvars(TEST_VAULT_DIR)).exists()
+

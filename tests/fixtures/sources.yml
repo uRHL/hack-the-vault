@@ -1,0 +1,16 @@
+# Use categories as keys
+htb:  # HTB categories => class HtbResource()
+  vpn: vpn
+  academy:
+    module: mod # -> 'htb.mod': class AcademyModule()
+    skill-path: spt
+    job-role-path: jpt
+  lab:
+    starting-point: spt
+    machine: mch  # equivalent to 'htb.mch: htb/lab/machine'
+    challenge: chl
+    sherlock: shr
+    track: trk
+    pro-lab: lab
+    fortress: ftr
+    battleground: btg

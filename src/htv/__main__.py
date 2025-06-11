@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-try:
-    from utils import CONF, FsTools, check_updates
-    from constants import VERSION, RES_TYPES
-    from resources import HtbVault, load
-except ModuleNotFoundError:
-    from .utils import CONF, FsTools, check_updates
-    from .constants import VERSION, RES_TYPES
-    from .resources import HtbVault, load
-finally:
-    import argparse
+# TEMPLATE
+from pathlib import Path
+import sys
+
+ROOT_PKG = Path(__file__).parents[1] # Points to install-dir/src/
+sys.path.insert(0, str(ROOT_PKG))
+
+from htv.constants import VERSION, PROG_NAME, PROG_DESCRIPTION
+from htv.utils import CONF, FsTools, check_updates
+from htv.resources import HtvVault, DataSources
+import argparse
 
 
 def init_mode() -> int:
@@ -18,7 +19,7 @@ def init_mode() -> int:
 
     :return: 0 if vault initialized successfully. 1 otherwise
     """
-    return HtbVault(ARGS.root_dir).makedirs(reset=ARGS.reset)
+    return HtvVault(ARGS.root_dir).makedirs(reset=ARGS.reset)
 
 
 def add_mode() -> int:
@@ -27,9 +28,9 @@ def add_mode() -> int:
     :return: 0 on success. 1 on error
     """
     if ARGS.json_data is None:
-        return HtbVault().add_resources(ARGS.t)
+        return HtvVault().add_resources(ARGS.t)
     else:  # Add resource from json data
-        return HtbVault().add_resources(load(ARGS.json_data))
+        return HtvVault().add_resources(DataSources.load(ARGS.json_data))
 
 
 def rm_mode() -> int:
@@ -54,10 +55,10 @@ def rm_mode() -> int:
     if 'VAULT' in ARGS.targets:
         print(f"[*] CAUTION: Deleting the entire vault")
         if confirm_prompt():
-            return HtbVault().removedirs()
+            return HtvVault().removedirs()
             # shutil.rmtree(CONF['VAULT_DIR'])
         return 0
-    return HtbVault().remove_resources(*ARGS.targets)
+    return HtvVault().remove_resources(*ARGS.targets)
 
 
 def list_mode() -> int:
@@ -65,7 +66,8 @@ def list_mode() -> int:
 
     :return: 0 on success. 1 otherwise
     """
-    HtbVault().list_resources(*ARGS.categories, name_regex=ARGS.name)
+    # TODO: if categories is None, list parent categories only
+    HtvVault().list_resources(*ARGS.categories, regex=ARGS.name)
     return 0
 
 
@@ -74,7 +76,7 @@ def use_mode() -> int:
 
     :return: 0 on success. 1 on error (resource not found)
     """
-    if HtbVault().use_resource(*ARGS.target) is None:
+    if HtvVault().use_resource(*ARGS.target) is None:
         return 1
     else:
         return 0
@@ -83,11 +85,11 @@ def use_mode() -> int:
 def clean_mode() -> int:
     """Clean-up the vault
 
-    :func:`resources.HtbVault.clean`
+    :func:`resources.HtvVault.clean`
 
     :return: 0 on success. 1 if an error occurred
     """
-    return HtbVault().clean()
+    return HtvVault.clean()
 
 
 def vpn_mode() -> int:
@@ -136,11 +138,9 @@ def version_mode() -> int:
 
 def _parse_args():
     """Command-line interface configuration"""
-    parser = argparse.ArgumentParser(
-        prog='htb-vault',
-        description='A simple CLI tool to manage your HTB vault for note taking',
-    )
-    # Init CLI
+    parser = argparse.ArgumentParser(prog=PROG_NAME, description=PROG_DESCRIPTION)
+    # parser = argparse.ArgumentParser()
+    # init vault CLI
     subparser = parser.add_subparsers(title='mode', dest='mode')
     vault_cli = subparser.add_parser(
         name='init',
@@ -166,12 +166,12 @@ def _parse_args():
     add_cli_group = add_cli.add_mutually_exclusive_group()
     add_cli_group.add_argument(
         '-t',
-        choices=list(RES_TYPES),
+        # choices=list(RES_TYPES),
         help="Type of resources to be added. If not specified it will be deduced from json data",
     )
     add_cli_group.add_argument(
         '--json-data',
-        help='Resource details, in JSON format. Obtained from htb-vault.js'
+        help='Resource details. This JSON is returned by toolkit.js when executed in a HTB resource page'
     )
     # Remove CLI
     remove_cli = subparser.add_parser(
@@ -189,14 +189,14 @@ def _parse_args():
         'targets',
         metavar='NAME_ID',
         nargs='+',
-        help='Name(s) or ID(s) of the resource(s) to be removed. To get the ID use the command `htb-vault.py list`. Use the name `VAULT` to delete the entire vault'
+        help='Name(s) or ID(s) of the resource(s) to be removed. To get the ID use the command `htv list`. Use the name `VAULT` to delete the entire vault'
     )
 
     # LIST CLI
     list_cli = subparser.add_parser(
         name='list',
-        description='Shows local HTB resources (modules, machines, VPNs). '
-             f"Resource categories: {', '.join(RES_TYPES)}",
+        description='Shows Vault resources (modules, exercises, ...). '
+             f"Resource categories defined in htv/datasources/sources.yml",
         help='Shows local HTB resources (modules, machines, VPNs)'
     )
     list_cli.add_argument(
@@ -223,7 +223,7 @@ def _parse_args():
         'target',
         metavar='NAME_ID',
         nargs='+',
-        help='Name or ID of the resource to be opened. To get the ID use the command `htb-vault list`'
+        help='Name or ID of the resource to be opened. To get the ID use the command `htv list`'
     )
 
     # Clean CLI
@@ -251,7 +251,7 @@ def _parse_args():
         metavar='NAME_ID',
         # default=None,
         nargs='*',
-        help='Name or ID of the vpn conf to be opened. To get the ID use the command `htb-vault vpn list`. Defaults to value set in the configuration file'
+        help='Name or ID of the vpn conf to be opened. To get the ID use the command `htv vpn list`. Defaults to value set in the configuration file'
     )
     parser.add_argument(
         '-V', '--version',
@@ -268,7 +268,6 @@ if __name__ == '__main__':
         check_updates()
     if ARGS.version:
         ARGS.mode = 'version'
-
     try:
         exit(eval(f"{ARGS.mode}_mode()"))
     except NameError:

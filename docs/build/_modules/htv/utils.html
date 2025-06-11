@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>htv.utils &mdash; Hack the Vault 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Hack the Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html#usage">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Hack the Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">htv.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for htv.utils</h1><div class="highlight"><pre>
+<span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROOT_DIR</span><span class="p">,</span> <span class="n">DEPENDENCIES</span><span class="p">,</span> <span class="n">RUNTIME_CONF</span><span class="p">,</span> <span class="n">DEFAULT_CONF</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROOT_DIR</span><span class="p">,</span> <span class="n">DEPENDENCIES</span><span class="p">,</span> <span class="n">RUNTIME_CONF</span><span class="p">,</span> <span class="n">DEFAULT_CONF</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">webbrowser</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pyperclip</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;CONF&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FsTools&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Conf&#39;</span>
+<span class="p">]</span>
+
+<span class="c1">#####   C L A S S E S   #####</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cache</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements a cache using a temp file.</span>
+<span class="sd">    Cache contains a list of paths, which is overwritten everytime the method :class:`resources.HtbVault.list_resources` is called.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get cache entries</span>
+
+<span class="sd">        :param index: If None all the contents of the cache are returned</span>
+<span class="sd">        :return: `Path` or a list of them. None if cache was empty or index provided out of bounds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># load last list results (.tmp)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;_CACHE_PATH&#39;</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">_cc</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)]</span>
+                <span class="k">return</span> <span class="n">_cc</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_cc</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[!] No cached results. Use option `list` to reload cache&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update cache with provided items&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;_CACHE_PATH&#39;</span><span class="p">],</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span><span class="p">],</span> <span class="n">file</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clears cache&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;_CACHE_PATH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;_CACHE_PATH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Conf">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.Conf">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Conf</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class. Allows to have a callable runtime instance that read/write the changes to a file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runtime</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a Configuration instance</span>
+
+<span class="sd">        :param runtime: runtime parameters</span>
+<span class="sd">        :param default: default parameters. If not found in local file, they will be added again</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_runtime</span> <span class="o">=</span> <span class="n">runtime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_runtime</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save current configuration</span>
+
+<span class="sd">        Save current configuration parameters to disk.</span>
+<span class="sd">        Runtime values (keys starting by `_`) are not dump into local file.</span>
+<span class="sd">        If a parameter contained environment variables, they are shortened again</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ROOT_DIR</span> <span class="o">/</span> <span class="s1">&#39;conf.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>  <span class="c1"># Save changes to disk</span>
+            <span class="n">_data</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>  <span class="c1"># Skip keys starting with &#39;_&#39;, they are only used in execution time</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="o">|</span><span class="nb">float</span><span class="p">):</span>
+                    <span class="n">_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>  <span class="c1"># If vars were expanded, replace them</span>
+                    <span class="n">_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>  <span class="c1"># cast any non-numeric value to str to avoid serialization problems</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Conf.load">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.Conf.load">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load configuration</span>
+
+<span class="sd">        (Re)load configuration from local file. Then the provided kwargs are added.</span>
+<span class="sd">        If local file does not exist it is created.</span>
+<span class="sd">        The configured runtime parameters are added.</span>
+<span class="sd">        Additionally, if any default parameter is missing it is added.</span>
+
+<span class="sd">        :param kwargs: parameters to be added to the configuration</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ROOT_DIR</span> <span class="o">/</span> <span class="s1">&#39;conf.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="p">):</span>  <span class="c1"># Missing some default keys</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[!] Conf file not found or missing default configuration params&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>  <span class="c1"># reset to default config</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>  <span class="c1"># Load configuration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_values</span><span class="p">(</span><span class="o">**</span><span class="n">_data</span><span class="p">)</span>  <span class="c1"># Load saved configuration</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_values</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># Add custom parameters</span></div>
+
+
+<div class="viewcode-block" id="Conf.update_values">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.Conf.update_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update configuration parameters</span>
+
+<span class="sd">        If a parameter contains environment variables, they are expanded again</span>
+
+<span class="sd">        :param kwargs: Values to be updated in the configuration</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="o">|</span><span class="n">Path</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;$&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># String contains env variables</span>
+                <span class="bp">self</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>  <span class="c1"># Save original value</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>  <span class="c1"># Expand variables</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Conf.remove_values">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.Conf.remove_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove configuration values</span>
+
+<span class="sd">        Remove configuration values then save changes to disk</span>
+
+<span class="sd">        :param args: Name(s) of the params to be removed from configuration</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Conf.reset">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.Conf.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resets the configuration to defaults parameters</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[*] Resetting default config...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_values</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="p">)</span>  <span class="c1"># Default conf values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_values</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_runtime</span><span class="p">)</span>  <span class="c1"># Add runtime parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FsTools">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FsTools</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Static class to interact with files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FsTools.dump_file">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools.dump_file">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dump_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">exist_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump content into file</span>
+
+<span class="sd">        Dump the provided content into a file.</span>
+<span class="sd">        If it does not exist, or any of the intermediate directories, they will be created</span>
+
+<span class="sd">        :param path: Path of the output file.</span>
+<span class="sd">        :param content: Content to be dumped into the file</span>
+<span class="sd">        :param exist_ok: If False and file already exists, raise FileExistError</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>  <span class="c1"># Create directory if it does not exist</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">exist_ok</span><span class="p">:</span>  <span class="c1"># If file exists</span>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> already exists and it&#39;s not empty&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>  <span class="c1"># Create new files or overwrite an existing one</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FsTools.js_to_clipboard">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools.js_to_clipboard">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">js_to_clipboard</span><span class="p">(</span><span class="n">stdout</span><span class="p">:</span> <span class="n">tqdm</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copies JS toolkit to the clipboard</span>
+
+<span class="sd">        :param stdout: Output stream to write the output</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_prompt</span> <span class="o">=</span> <span class="s1">&#39;[*] Use the script in the dev-tools console (F12). Then copy the returned value into the terminal. [Press ENTER to continue]&#39;</span>
+
+        <span class="n">pyperclip</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">FsTools</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;toolkit.js&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  [+] JavaScript tools copied to the clipboard&#39;</span><span class="p">)</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">_prompt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[+] JavaScript tools copied to the clipboard&#39;</span><span class="p">)</span>
+            <span class="nb">input</span><span class="p">(</span><span class="n">_prompt</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="FsTools.render_template">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools.render_template">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_template</span><span class="p">(</span><span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render a template</span>
+
+<span class="sd">        Renders a template from the template directory (`CONF[&#39;_JINJA_ENV&#39;]`)</span>
+<span class="sd">        If out is provided, saves the rendered template into that file</span>
+
+<span class="sd">        :param template: template to be used from /templates</span>
+<span class="sd">        :param out: output file to write the template. If None, just returns the rendered template</span>
+<span class="sd">        :param kwargs: Additional arguments for the render</span>
+<span class="sd">        :return: The rendered template</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">taggify</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Adds surrounding back-quotes to each element of the list (MarkDown in-line code mode)&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2">`&quot;</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">`&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">taggify</span><span class="o">=</span><span class="n">taggify</span><span class="p">)</span> <span class="c1"># aux function to render markdown</span>
+        <span class="n">_render</span> <span class="o">=</span> <span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;_JINJA_ENV&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">template</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">FsTools</span><span class="o">.</span><span class="n">dump_file</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">_render</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_render</span></div>
+
+
+<div class="viewcode-block" id="FsTools.secure_filename">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools.secure_filename">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">secure_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a secure filename:</span>
+
+<span class="sd">        Returns a secure filename: lowercased, not containing special characters and</span>
+<span class="sd">        with all spaces replaced by underscores (`_`)</span>
+
+<span class="sd">        :return: Secured filename</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;[ ,&amp;-/:]+&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FsTools.secure_dirname">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools.secure_dirname">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">secure_dirname</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a secure dir name:</span>
+
+<span class="sd">        Returns a secure dir name: lowercased, not containing special characters and</span>
+<span class="sd">        with all spaces replaced by dashes (`-`)</span>
+
+<span class="sd">        :return: Secured dir name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;[ ,&amp;-/:]+&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FsTools.search_res_by_name_id">
+<a class="viewcode-back" href="../../api/utils.html#htv.utils.FsTools.search_res_by_name_id">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">search_res_by_name_id</span><span class="p">(</span><span class="n">selector</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Search resources by name or index</span>
+
+<span class="sd">        Search among cached entries and/or the entire vault for a resource.</span>
+<span class="sd">        If found, its absolute path is returned.</span>
+<span class="sd">        Index is between [1, N], where N is the number of cached resources</span>
+
+<span class="sd">        :param selector: Resource name or cache index</span>
+<span class="sd">        :return: Path to the resource if found, None otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># Try cache</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">selector</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Index provided but out of bounds</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>  <span class="c1"># Index provided, but out of bounds</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[-] Index </span><span class="si">{</span><span class="n">selector</span><span class="si">}</span><span class="s2"> does not exist. Run command `list` again.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># Not an index, try string search</span>
+            <span class="n">_tgs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;VAULT_DIR&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;**/</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_tgs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_tgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[-] Not a perfect match, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_tgs</span><span class="p">)</span><span class="si">}</span><span class="s2"> results&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span></div>
+</div>
+
+
+<span class="c1">#####   F U N C T I O N S   #####</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">open_browser_tab</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open url in a new tab</span>
+
+<span class="sd">    :param url: URL to be opened</span>
+<span class="sd">    :param quiet: If True runs the command in the background. Else runs in foreground</span>
+<span class="sd">    :param delay: Seconds to wait before and after opening the page</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quiet</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python3 -c &quot;import webbrowser;webbrowser.open_new_tab(</span><span class="se">\&#39;</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">)&quot; &amp;&gt; /dev/null &amp;&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">webbrowser</span><span class="o">.</span><span class="n">open_new_tab</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_updates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check for dependencies updates</span>
+
+<span class="sd">    Check for updates of the required dependencies which are listed in constants.DEPENDENCIES</span>
+
+<span class="sd">    :return: 0 if dependencies are updated successfully. 1 if update failed. 2 if operation canceled</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: run pip install -U -r requirements.txt</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[*] Checking for updates...&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;sudo apt update&#39;</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sudo apt upgrade </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DEPENDENCIES</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[!] Update cancelled&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">2</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[!] Error updating dependencies&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[+] Dependencies updated successfully&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">config_git_user</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prompts user to input name and email to be used for commits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[*] A name and email must be configured so git is able to push into the repository&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[*] Who is in charge of this vault?&#39;</span><span class="p">)</span>
+    <span class="n">name_input</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">email_input</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">while</span> <span class="n">name_input</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]:</span>
+        <span class="n">name_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;&gt;&gt; name: &#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">email_input</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]:</span>
+        <span class="n">email_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;&gt;&gt; email: &#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;.+@\w+\.\w{2,}&#39;</span><span class="p">,</span> <span class="n">email_input</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">email_input</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">name_input</span><span class="p">,</span> <span class="n">email_input</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;git config user.name &quot;</span><span class="si">{</span><span class="n">name_input</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;VAULT_DIR&#39;</span><span class="p">])</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;git config user.email &quot;</span><span class="si">{</span><span class="n">email_input</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">CONF</span><span class="p">[</span><span class="s1">&#39;VAULT_DIR&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+<span class="c1">#####   D Y N A M I C   V A L U E S   #####</span>
+
+<span class="sd">&quot;&quot;&quot;Dynamic configuration&quot;&quot;&quot;</span>
+<span class="n">CONF</span> <span class="o">=</span> <span class="n">Conf</span><span class="p">(</span><span class="n">runtime</span><span class="o">=</span><span class="n">RUNTIME_CONF</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_CONF</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, @uRHL.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

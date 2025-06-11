@@ -1,0 +1,64 @@
+# TODO: gen resources.py
+# TODO: gen toolkit.js one parser function per category
+
+test_htb:  # HTB categories => class HtbResource()
+  _shared_metadata:
+    os: None
+    points: None
+    release_date: None
+    rating: None
+    academy_modules: None
+    targets: []
+  mod:  # Subcategory mod --> htb.mod
+    type: module  # module|exercise|path
+    categories: academy/module # -> 'htb.mod': class AcademyModule(HtbResource)
+    attr:
+      _tier: None # --> create getter and setter
+      cost: None
+      duration: None
+      summary: None
+  spt:     # AcademySkillPath
+    type: path
+    categories: academy/skill-path
+    attr:
+      cost: None # int
+      duration: None #str
+      tier: func
+  jpt:
+    type: path
+    categories: academy/job-role-path
+    attr:
+      cost: None # int
+      duration: None #str
+      tier: func
+  stp:  # LabStartingPoint
+    type: exercise
+    categories: lab/starting-point
+  mch:  # equivalent to 'htb.mch: htb/lab/machine'
+    type: exercise
+    categories: lab/machine
+  chl:
+    type: exercise
+    categories: lab/challenge
+    metadata:
+      logo: https://app.hackthebox.com/images/logos/htb_ic2.svg
+  shr:
+    type: exercise
+    categories: lab/sherlock
+  trk:
+    type: path
+    categories: lab/track
+  lab:
+    type: exercise
+    categories: lab/pro-lab
+    attr:
+      entry_point: None # str
+  ftr:
+    type: exercise
+    categories: lab/fortress
+  btg:
+    type: exercise
+    categories: lab/battleground
+  vpn: # default type: HtvResource or CustomResource
+    categories: vpn/*.ovpn
+    ext: .ovpn

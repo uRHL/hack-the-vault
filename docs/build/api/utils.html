@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utils &mdash; Hack the Vault 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Resources" href="resources.html" />
+    <link rel="prev" title="API documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Hack the Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html#usage">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#htv.utils.FsTools"><code class="docutils literal notranslate"><span class="pre">FsTools</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.FsTools.dump_file"><code class="docutils literal notranslate"><span class="pre">FsTools.dump_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.FsTools.js_to_clipboard"><code class="docutils literal notranslate"><span class="pre">FsTools.js_to_clipboard()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.FsTools.render_template"><code class="docutils literal notranslate"><span class="pre">FsTools.render_template()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.FsTools.secure_filename"><code class="docutils literal notranslate"><span class="pre">FsTools.secure_filename()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.FsTools.secure_dirname"><code class="docutils literal notranslate"><span class="pre">FsTools.secure_dirname()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.FsTools.search_res_by_name_id"><code class="docutils literal notranslate"><span class="pre">FsTools.search_res_by_name_id()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.utils.Conf"><code class="docutils literal notranslate"><span class="pre">Conf</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.Conf.load"><code class="docutils literal notranslate"><span class="pre">Conf.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.Conf.update_values"><code class="docutils literal notranslate"><span class="pre">Conf.update_values()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.Conf.remove_values"><code class="docutils literal notranslate"><span class="pre">Conf.remove_values()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.utils.Conf.reset"><code class="docutils literal notranslate"><span class="pre">Conf.reset()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html">Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">API tutorial</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Hack the Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API documentation</a></li>
+      <li class="breadcrumb-item active">Utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-htv.utils">
+<span id="utils"></span><h1>Utils<a class="headerlink" href="#module-htv.utils" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.utils.FsTools">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.utils.</span></span><span class="sig-name descname"><span class="pre">FsTools</span></span><a class="reference internal" href="../_modules/htv/utils.html#FsTools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Static class to interact with files</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.FsTools.dump_file">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exist_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#FsTools.dump_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools.dump_file" title="Link to this definition"></a></dt>
+<dd><p>Dump content into file</p>
+<p>Dump the provided content into a file.
+If it does not exist, or any of the intermediate directories, they will be created</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – Path of the output file.</p></li>
+<li><p><strong>content</strong> – Content to be dumped into the file</p></li>
+<li><p><strong>exist_ok</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If False and file already exists, raise FileExistError</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.FsTools.js_to_clipboard">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">js_to_clipboard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#FsTools.js_to_clipboard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools.js_to_clipboard" title="Link to this definition"></a></dt>
+<dd><p>Copies JS toolkit to the clipboard</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stdout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tqdm</span></code></span>) – Output stream to write the output</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.FsTools.render_template">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">render_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#FsTools.render_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools.render_template" title="Link to this definition"></a></dt>
+<dd><p>Render a template</p>
+<p>Renders a template from the template directory (<cite>CONF[‘_JINJA_ENV’]</cite>)
+If out is provided, saves the rendered template into that file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>template</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – template to be used from /templates</p></li>
+<li><p><strong>out</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – output file to write the template. If None, just returns the rendered template</p></li>
+<li><p><strong>kwargs</strong> – Additional arguments for the render</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The rendered template</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.FsTools.secure_filename">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">secure_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#FsTools.secure_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools.secure_filename" title="Link to this definition"></a></dt>
+<dd><p>Returns a secure filename:</p>
+<p>Returns a secure filename: lowercased, not containing special characters and
+with all spaces replaced by underscores (<cite>_</cite>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Secured filename</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.FsTools.secure_dirname">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">secure_dirname</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#FsTools.secure_dirname"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools.secure_dirname" title="Link to this definition"></a></dt>
+<dd><p>Returns a secure dir name:</p>
+<p>Returns a secure dir name: lowercased, not containing special characters and
+with all spaces replaced by dashes (<cite>-</cite>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Secured dir name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.FsTools.search_res_by_name_id">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">search_res_by_name_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#FsTools.search_res_by_name_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.FsTools.search_res_by_name_id" title="Link to this definition"></a></dt>
+<dd><p>Search resources by name or index</p>
+<p>Search among cached entries and/or the entire vault for a resource.
+If found, its absolute path is returned.
+Index is between [1, N], where N is the number of cached resources</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>selector</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Resource name or cache index</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to the resource if found, None otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.utils.Conf">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.utils.</span></span><span class="sig-name descname"><span class="pre">Conf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#Conf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.Conf" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<p>Configuration class. Allows to have a callable runtime instance that read/write the changes to a file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.Conf.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#Conf.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.Conf.load" title="Link to this definition"></a></dt>
+<dd><p>Load configuration</p>
+<p>(Re)load configuration from local file. Then the provided kwargs are added.
+If local file does not exist it is created.
+The configured runtime parameters are added.
+Additionally, if any default parameter is missing it is added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – parameters to be added to the configuration</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.Conf.update_values">
+<span class="sig-name descname"><span class="pre">update_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#Conf.update_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.Conf.update_values" title="Link to this definition"></a></dt>
+<dd><p>Update configuration parameters</p>
+<p>If a parameter contains environment variables, they are expanded again</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Values to be updated in the configuration</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.Conf.remove_values">
+<span class="sig-name descname"><span class="pre">remove_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#Conf.remove_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.Conf.remove_values" title="Link to this definition"></a></dt>
+<dd><p>Remove configuration values</p>
+<p>Remove configuration values then save changes to disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – Name(s) of the params to be removed from configuration</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.utils.Conf.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/utils.html#Conf.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.utils.Conf.reset" title="Link to this definition"></a></dt>
+<dd><p>Resets the configuration to defaults parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="API documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resources.html" class="btn btn-neutral float-right" title="Resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, @uRHL.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

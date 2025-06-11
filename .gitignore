@@ -1,7 +1,10 @@
 venv
 .idea
 __pycache__
-conf.json
+conf.yml
+
+# Draw.io backup files
+**/*.bkp
 
 # Ignore generated documentation
 docs/_build

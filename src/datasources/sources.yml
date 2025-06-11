@@ -1,0 +1,25 @@
+# Default categories
+personal:
+  mod: module
+  path: path
+  exr: exercise
+
+#   ADD YOUR CUSTOM CATEGORIES HERE
+#   SYNTAX: type.sub-type: category/sub-category/sub-sub-category
+
+htb:  # HTB categories => class HtbResource()
+  mod: academy/module # -> 'htb.mod': class AcademyModule()
+  spt: academy/skill-path
+  jpt: academy/job-role-path
+  stp: lab/starting-point
+  mch: lab/machine  # equivalent to 'htb.mch: htb/lab/machine'
+  chl: lab/challenge
+  shr: lab/sherlock
+  trk: lab/track
+  lab: lab/pro-lab
+  ftr: lab/fortress
+  btg: lab/battleground
+  vpn: vpn
+pwn-college:  # PWN COLLEGE categories => class PwnCollegeResource()
+  dojo: dojo   # pwn-college/dojo
+  mod: module  # pwn-college/module

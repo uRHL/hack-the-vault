@@ -1,0 +1,932 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resources &mdash; Hack the Vault 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API tutorial" href="tutorial.html" />
+    <link rel="prev" title="Utils" href="utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Hack the Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html#usage">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Resources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.load"><code class="docutils literal notranslate"><span class="pre">load()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.HtbVault"><code class="docutils literal notranslate"><span class="pre">HtbVault</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.remove_resources"><code class="docutils literal notranslate"><span class="pre">HtbVault.remove_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.makedirs"><code class="docutils literal notranslate"><span class="pre">HtbVault.makedirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.removedirs"><code class="docutils literal notranslate"><span class="pre">HtbVault.removedirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.clean"><code class="docutils literal notranslate"><span class="pre">HtbVault.clean()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.add_resources"><code class="docutils literal notranslate"><span class="pre">HtbVault.add_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.list_resources"><code class="docutils literal notranslate"><span class="pre">HtbVault.list_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbVault.use_resource"><code class="docutils literal notranslate"><span class="pre">HtbVault.use_resource()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.VpnClient"><code class="docutils literal notranslate"><span class="pre">VpnClient</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.list_resources"><code class="docutils literal notranslate"><span class="pre">VpnClient.list_resources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.type_name"><code class="docutils literal notranslate"><span class="pre">VpnClient.type_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.country"><code class="docutils literal notranslate"><span class="pre">VpnClient.country</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.cat"><code class="docutils literal notranslate"><span class="pre">VpnClient.cat</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.server_id"><code class="docutils literal notranslate"><span class="pre">VpnClient.server_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.path"><code class="docutils literal notranslate"><span class="pre">VpnClient.path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.name"><code class="docutils literal notranslate"><span class="pre">VpnClient.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.open"><code class="docutils literal notranslate"><span class="pre">VpnClient.open()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.start"><code class="docutils literal notranslate"><span class="pre">VpnClient.start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.stop"><code class="docutils literal notranslate"><span class="pre">VpnClient.stop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.VpnClient.status"><code class="docutils literal notranslate"><span class="pre">VpnClient.status()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.HtbModule"><code class="docutils literal notranslate"><span class="pre">HtbModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.tier"><code class="docutils literal notranslate"><span class="pre">HtbModule.tier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.total_sections"><code class="docutils literal notranslate"><span class="pre">HtbModule.total_sections</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.to_dict"><code class="docutils literal notranslate"><span class="pre">HtbModule.to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.update"><code class="docutils literal notranslate"><span class="pre">HtbModule.update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.makedirs"><code class="docutils literal notranslate"><span class="pre">HtbModule.makedirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.add_section"><code class="docutils literal notranslate"><span class="pre">HtbModule.add_section()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbModule.remove_section"><code class="docutils literal notranslate"><span class="pre">HtbModule.remove_section()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.HtbPath"><code class="docutils literal notranslate"><span class="pre">HtbPath</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbPath.tier"><code class="docutils literal notranslate"><span class="pre">HtbPath.tier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbPath.status"><code class="docutils literal notranslate"><span class="pre">HtbPath.status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbPath.to_dict"><code class="docutils literal notranslate"><span class="pre">HtbPath.to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbPath.update"><code class="docutils literal notranslate"><span class="pre">HtbPath.update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbPath.makedirs"><code class="docutils literal notranslate"><span class="pre">HtbPath.makedirs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.SkillPath"><code class="docutils literal notranslate"><span class="pre">SkillPath</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.JobRolePath"><code class="docutils literal notranslate"><span class="pre">JobRolePath</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.HtbLabResource"><code class="docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbLabResource.to_dict"><code class="docutils literal notranslate"><span class="pre">HtbLabResource.to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbLabResource.update"><code class="docutils literal notranslate"><span class="pre">HtbLabResource.update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbLabResource.makedirs"><code class="docutils literal notranslate"><span class="pre">HtbLabResource.makedirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbLabResource.add_task"><code class="docutils literal notranslate"><span class="pre">HtbLabResource.add_task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.HtbLabResource.remove_task"><code class="docutils literal notranslate"><span class="pre">HtbLabResource.remove_task()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.StartingPointMachine"><code class="docutils literal notranslate"><span class="pre">StartingPointMachine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.Machine"><code class="docutils literal notranslate"><span class="pre">Machine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.ChallengeMachine"><code class="docutils literal notranslate"><span class="pre">ChallengeMachine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.SherlockMachine"><code class="docutils literal notranslate"><span class="pre">SherlockMachine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.MachineTrack"><code class="docutils literal notranslate"><span class="pre">MachineTrack</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.MachineTrack.update"><code class="docutils literal notranslate"><span class="pre">MachineTrack.update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.MachineTrack.makedirs"><code class="docutils literal notranslate"><span class="pre">MachineTrack.makedirs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.ProLabMachine"><code class="docutils literal notranslate"><span class="pre">ProLabMachine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.ProLabMachine.update"><code class="docutils literal notranslate"><span class="pre">ProLabMachine.update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.ProLabMachine.makedirs"><code class="docutils literal notranslate"><span class="pre">ProLabMachine.makedirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.ProLabMachine.to_dict"><code class="docutils literal notranslate"><span class="pre">ProLabMachine.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.MachineFortress"><code class="docutils literal notranslate"><span class="pre">MachineFortress</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#htv.resources.MachineFortress.makedirs"><code class="docutils literal notranslate"><span class="pre">MachineFortress.makedirs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#htv.resources.MachineBattleground"><code class="docutils literal notranslate"><span class="pre">MachineBattleground</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">API tutorial</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Hack the Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API documentation</a></li>
+      <li class="breadcrumb-item active">Resources</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/resources.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-htv.resources">
+<span id="resources"></span><h1>Resources<a class="headerlink" href="#module-htv.resources" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="htv.resources.load">
+<span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.load" title="Link to this definition"></a></dt>
+<dd><p>Parses JSON data returned by toolkit.js</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – Serialized data. It may be a JSON string/file, a serialized HtbResource (dict) or a list of them (llist[dict])</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the deserialized HtbResource or list of them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.HtbVault">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">HtbVault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Dataclass representing the HtbVault.
+It allows to manage the vault, adding/removing/opening resources,
+listing them or initializing/deleting the entire vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_path</strong> – [<cite>Path</cite>] Path to the vault. May contain environment variables</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>[</strong><strong>str</strong><strong>|</strong><strong>Path</strong><strong>]</strong> (<em>path</em>) – Path to the vault. If None, the default directory from conf will be used</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.remove_resources">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.remove_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.remove_resources" title="Link to this definition"></a></dt>
+<dd><p>Remove resources from the vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – resource(s) name or index</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of resources deleted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Create vault dir structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, and the vault already exists, the vault is deleted and reset to initial state</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>0 if vault initialized successfully. 1 otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.removedirs">
+<span class="sig-name descname"><span class="pre">removedirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.removedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.removedirs" title="Link to this definition"></a></dt>
+<dd><p>Removes the entire vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 on success</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.clean">
+<span class="sig-name descname"><span class="pre">clean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.clean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.clean" title="Link to this definition"></a></dt>
+<dd><p>Clean-up vault</p>
+<p>Deletes hidden directories created by text editors, in addition to cached and temp files.
+These files/dirs usually start by ‘.’ or ‘_’. <cite>.gitignore</cite> file and <cite>.git</cite> dir are always excluded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 on success. 1 if an error occurred</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.add_resources">
+<span class="sig-name descname"><span class="pre">add_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.add_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.add_resources" title="Link to this definition"></a></dt>
+<dd><p>Add resource(s) to the vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code>]</span>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code> or a list of them. If None, user will be prompt to input required Resource data</p></li>
+<li><p><strong>stdout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tqdm</span></code></span>) – Stdout to log information. Default to STDOUT</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>0 on success. 1 on error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.list_resources">
+<span class="sig-name descname"><span class="pre">list_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.list_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.list_resources" title="Link to this definition"></a></dt>
+<dd><p>List resources from the vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> – resource types <code class="xref py py-attr docutils literal notranslate"><span class="pre">HtbResource.type</span></code></p></li>
+<li><p><strong>name_regex</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – regex applied on the resource name. If None, no filter is applied</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list with the resources found, or None if no match</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbVault.use_resource">
+<span class="sig-name descname"><span class="pre">use_resource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbVault.use_resource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbVault.use_resource" title="Link to this definition"></a></dt>
+<dd><p>Opens resource(s)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – Name(s) and/or index(es) of the resources to be opened</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code> | <a class="reference internal" href="#htv.resources.VpnClient" title="htv.resources.VpnClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">VpnClient</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A HtbResource, or a list of them. None if the resource could not be opened</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.VpnClient">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">VpnClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#VpnClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.VpnClient" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Dataclass representing a configuration for OpenVpn.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>__resource_dir__</strong> – [Path] Location for these resources within the vault (relative path)</p></li>
+<li><p><strong>protocol</strong> – [str] Protocol configured in the vpn file (tcp or udp)</p></li>
+<li><p><strong>port</strong> – [int] Port configured in vpn file. Normally 443 for tcp and 1337 for udp</p></li>
+<li><p><strong>remote</strong> – [str] Full string of the remote server configured in the vpn file.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.list_resources">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#VpnClient.list_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.VpnClient.list_resources" title="Link to this definition"></a></dt>
+<dd><p>List VPN resources</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>regex</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Regex to be applied on the resource name to filter the results. If None, no filtering</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list with the resources found in local vault</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.type_name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type_name</span></span><a class="headerlink" href="#htv.resources.VpnClient.type_name" title="Link to this definition"></a></dt>
+<dd><p>Resource type full-name</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.country">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">country</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#htv.resources.VpnClient.country" title="Link to this definition"></a></dt>
+<dd><p>Country configured for this VpnClient (EU, UE, SG, AU)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.cat">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#htv.resources.VpnClient.cat" title="Link to this definition"></a></dt>
+<dd><p>Category configured for this VpnClient (Free, VIP, VIP+)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.server_id">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">server_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#htv.resources.VpnClient.server_id" title="Link to this definition"></a></dt>
+<dd><p>Server id provided by HTB</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.path">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#htv.resources.VpnClient.path" title="Link to this definition"></a></dt>
+<dd><p>Path to VPN configuration file</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#htv.resources.VpnClient.name" title="Link to this definition"></a></dt>
+<dd><p>Human-readable string representing the VpnClient (<code class="xref py py-func docutils literal notranslate"><span class="pre">VpnClient.__str__()</span></code>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#VpnClient.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.VpnClient.open" title="Link to this definition"></a></dt>
+<dd><p>Updates the app runtime configuration with this VPN details</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#VpnClient.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.VpnClient.start" title="Link to this definition"></a></dt>
+<dd><p>Starts the vpn using loaded configuration</p>
+<p>Starts an <cite>openvpn</cite> process in the background.
+If a vpn is already running and <cite>force</cite> is False, this VPN will not be started</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True and a VPN is already running, it is stopped</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>0 on success. 1 if a VPN is already running</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#VpnClient.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.VpnClient.stop" title="Link to this definition"></a></dt>
+<dd><p>Stops this VpnClient, if it is running</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>0 on success</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.VpnClient.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#VpnClient.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.VpnClient.status" title="Link to this definition"></a></dt>
+<dd><p>Check if this VPN is running</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>quiet</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, the VPN log is shown in the terminal</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>0 if VPN is stopped. 1 if running</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.HtbModule">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">HtbModule</span></span><a class="reference internal" href="../_modules/htv/resources.html#HtbModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbModule" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code></p>
+<p>Class representing an HTB Module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>TIER_COST</strong> – [dict] Mapping tier-cost</p></li>
+<li><p><strong>COST_TIER</strong> – [dict] Mapping cost-tier</p></li>
+<li><p><strong>_type</strong> – [str] mod</p></li>
+<li><p><strong>cost</strong> – [int] Module cost (in cubes)</p></li>
+<li><p><strong>duration</strong> – [str] Approximated time required to complete the module (days-hours)</p></li>
+<li><p><strong>summary</strong> – [str] Brief summary of the module</p></li>
+<li><p><strong>sections</strong> – [str] Module sections (<code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.tier">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tier</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#htv.resources.HtbModule.tier" title="Link to this definition"></a></dt>
+<dd><p>Module tier (0, I, II, III, IV)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.total_sections">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_sections</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#htv.resources.HtbModule.total_sections" title="Link to this definition"></a></dt>
+<dd><p>Return the total number of sections included in this module</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbModule.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbModule.to_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict representation of this Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbModule.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbModule.update" title="Link to this definition"></a></dt>
+<dd><p>Update the module attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Module attributes to be updated</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbModule.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbModule.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Create dir structure for this Module in the configured vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.add_section">
+<span class="sig-name descname"><span class="pre">add_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbModule.add_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbModule.add_section" title="Link to this definition"></a></dt>
+<dd><p>Adds a new section to this module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Type of section (interactive / document)</p></li>
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Title of the section. May contain spaces</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code> added</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbModule.remove_section">
+<span class="sig-name descname"><span class="pre">remove_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbModule.remove_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbModule.remove_section" title="Link to this definition"></a></dt>
+<dd><p>Removes a section from this module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the section to be removed</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the removed <code class="xref py py-class docutils literal notranslate"><span class="pre">Section</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.HtbPath">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">HtbPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbPath" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code></p>
+<p><strong>Abstract class</strong> representing a Path in the HTB academy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_progress</strong> – [float] Completion progress</p></li>
+<li><p><strong>cost</strong> – [int]: Path total cost (in cubes)</p></li>
+<li><p><strong>duration</strong> – [str] Approximated time to complete the path (days)</p></li>
+<li><p><strong>sections</strong> – [int] Total number of sections included in the path</p></li>
+<li><p><strong>modules</strong> – [list[<a class="reference internal" href="#htv.resources.HtbModule" title="htv.resources.HtbModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbModule</span></code></a>]] List of modules included in the path</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.HtbPath.tier">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tier</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#htv.resources.HtbPath.tier" title="Link to this definition"></a></dt>
+<dd><p>Aggregated tier, combining all tiers of this path’s modules</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="htv.resources.HtbPath.status">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#htv.resources.HtbPath.status" title="Link to this definition"></a></dt>
+<dd><p>Completion status string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbPath.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbPath.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbPath.to_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict representation of this path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbPath.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbPath.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbPath.update" title="Link to this definition"></a></dt>
+<dd><p>Update this path attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Path attributes to be updated</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbPath.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">missing_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbPath.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbPath.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Create the directory structure of the path, including the corresponding modules</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>missing_ok</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, user will not be prompted to add the missing modules</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.SkillPath">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">SkillPath</span></span><a class="reference internal" href="../_modules/htv/resources.html#SkillPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.SkillPath" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbPath" title="htv.resources.HtbPath"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbPath</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.JobRolePath">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">JobRolePath</span></span><a class="reference internal" href="../_modules/htv/resources.html#JobRolePath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.JobRolePath" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbPath" title="htv.resources.HtbPath"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbPath</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.HtbLabResource">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">HtbLabResource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbLabResource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbLabResource" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">HtbResource</span></code></p>
+<p><strong>Abstract class</strong> representing a resource from HTB lab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tasks</strong> – [list[<code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code>]] List of tasks associated to this resource</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbLabResource.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbLabResource.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbLabResource.to_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – If provided, write dumps the returned dict into this path</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict representation of this resource</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbLabResource.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbLabResource.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbLabResource.update" title="Link to this definition"></a></dt>
+<dd><p>Update machine attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Machine Attributes to be updated</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbLabResource.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbLabResource.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbLabResource.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Create dir structure for this resource within the configured vault</p>
+<p>If the resource already exists in the local vault, only its info.json file will be updated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbLabResource.add_task">
+<span class="sig-name descname"><span class="pre">add_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbLabResource.add_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbLabResource.add_task" title="Link to this definition"></a></dt>
+<dd><p>Adds a new <code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code> to this machine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Text of the task</p></li>
+<li><p><strong>answer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Answer of the task</p></li>
+<li><p><strong>points</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Points of the task</p></li>
+<li><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the task. Defaults to None (auto-increment)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the added <code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.HtbLabResource.remove_task">
+<span class="sig-name descname"><span class="pre">remove_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#HtbLabResource.remove_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.HtbLabResource.remove_task" title="Link to this definition"></a></dt>
+<dd><p>Removes a <code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code> from this machine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the Task to be removed</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the removed <code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.StartingPointMachine">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">StartingPointMachine</span></span><a class="reference internal" href="../_modules/htv/resources.html#StartingPointMachine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.StartingPointMachine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.Machine">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">Machine</span></span><a class="reference internal" href="../_modules/htv/resources.html#Machine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.Machine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.ChallengeMachine">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">ChallengeMachine</span></span><a class="reference internal" href="../_modules/htv/resources.html#ChallengeMachine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.ChallengeMachine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+<p>Class representing a Challenge in the HTB lab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>info.logo</strong> – [str] ‘<a class="reference external" href="https://app.hackthebox.com/images/logos/htb_ic2.svg">https://app.hackthebox.com/images/logos/htb_ic2.svg</a>’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.SherlockMachine">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">SherlockMachine</span></span><a class="reference internal" href="../_modules/htv/resources.html#SherlockMachine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.SherlockMachine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.MachineTrack">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">MachineTrack</span></span><a class="reference internal" href="../_modules/htv/resources.html#MachineTrack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.MachineTrack" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+<p>Class representing a Track in the HTB lab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tasks</strong> – [list[<code class="xref py py-class docutils literal notranslate"><span class="pre">HtbMachine</span></code>]] List of machines (lab machines and challenges) associated to the track</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.MachineTrack.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#MachineTrack.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.MachineTrack.update" title="Link to this definition"></a></dt>
+<dd><p>Update this MachineTrack attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Attributes to be updated</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.MachineTrack.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#MachineTrack.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.MachineTrack.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Creates the dir structure for this track within the configured vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.ProLabMachine">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">ProLabMachine</span></span><a class="reference internal" href="../_modules/htv/resources.html#ProLabMachine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.ProLabMachine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.ProLabMachine.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#ProLabMachine.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.ProLabMachine.update" title="Link to this definition"></a></dt>
+<dd><p>Update this ProLabMachine attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Attributes to be updated</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.ProLabMachine.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#ProLabMachine.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.ProLabMachine.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Creates the dir structure for this ProLabMachine within the configured vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.ProLabMachine.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#ProLabMachine.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.ProLabMachine.to_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – If provided, write dumps the returned dict into this path</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict representation of this resource</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.MachineFortress">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">MachineFortress</span></span><a class="reference internal" href="../_modules/htv/resources.html#MachineFortress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.MachineFortress" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="htv.resources.MachineFortress.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/htv/resources.html#MachineFortress.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.MachineFortress.makedirs" title="Link to this definition"></a></dt>
+<dd><p>Creates the dir structure for this MachineFortress within the configured vault</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="htv.resources.MachineBattleground">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">htv.resources.</span></span><span class="sig-name descname"><span class="pre">MachineBattleground</span></span><a class="reference internal" href="../_modules/htv/resources.html#MachineBattleground"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#htv.resources.MachineBattleground" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#htv.resources.HtbLabResource" title="htv.resources.HtbLabResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HtbLabResource</span></code></a></p>
+<p>Class representing a Battleground in the HTB lab</p>
+<p>:raise NotImplementedError</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="utils.html" class="btn btn-neutral float-left" title="Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="API tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, @uRHL.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

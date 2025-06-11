@@ -7,8 +7,6 @@ conf.yml
 **/*.bkp
 
 # Ignore generated documentation
-docs/_build
-docs/_static
-docs/_templates
+docs/build/
 docs/Makefile
 docs/make.bat

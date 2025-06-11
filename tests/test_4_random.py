@@ -21,4 +21,4 @@ def read(**kwargs) -> dict:
 
 def test_read_sources():
     pprint(read())
-    raise TypeError
+    assert read()

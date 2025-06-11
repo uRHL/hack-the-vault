@@ -2,31 +2,32 @@ from htv.utils import FsTools, Cache, check_updates
 from pathlib import Path
 from htv import CONF
 
-import pyperclip
+
+import htv.constants
 import pytest
 
 class TestConf:
     test_values = dict(k1=1, k2=2, k3=3)
-
+    default_len = len(htv.constants.DEFAULT_CONF) + len(htv.constants.RUNTIME_CONF)
     def test_init(self):
-        # By default 3 values are loaded: 2 default params, 1 runtime params
-        assert len(CONF) == 3
+        # By default 4 values are loaded: 3 default params, 1 runtime params
+        assert len(CONF) == self.default_len
 
     def test_remove_non_existent(self):
         CONF.remove_values(*self.test_values.keys())
-        assert len(CONF) == 3
+        assert len(CONF) == self.default_len
 
     def test_update_values(self):
         CONF.update_values(**self.test_values)
-        assert len(CONF) == 6
+        assert len(CONF) == self.default_len + len(self.test_values)
 
     def test_remove_existent(self):
         CONF.remove_values(list(self.test_values.keys())[0])
-        assert len(CONF) == 5
+        assert len(CONF) == self.default_len + len(self.test_values) - 1
 
     def test_reset(self):
         CONF.reset()
-        assert len(CONF) == 3
+        assert len(CONF) == self.default_len
 
 class TestCache:
     test_values = ['item1', 'item2', 'item3']

@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-import json
 import htv
 import os
 
@@ -24,15 +23,6 @@ class TestDataSources:
 
     @pytest.mark.parametrize('path', sorted((Path(__file__).parent / 'fixtures').glob('[0-9]*')))
     def test_load(self, path):
-        # Dynamic modification of load parameters to test more cases
-        # if path.name.startswith('1_mod'):  # test load from json string
-        #     with open(path, 'r') as f:
-        #         res = htv.DataSources.load(f.read())
-        # elif path.name.startswith('2_mod'):  # test load from dict
-        #     with open(path, 'r') as f:
-        #         res = htv.DataSources.load(json.load(f))
-        # else:  # test load from file
-        #     res = htv.DataSources.load(path)
         with open(path, 'r') as file:
             res = htv.DataSources.load(file.read())
         if isinstance(res, list):
@@ -42,52 +32,55 @@ class TestDataSources:
             assert isinstance(res, htv.HtvResource)
 
 class TestVault:
-    vault = htv.HtvVault(TEST_VAULT_DIR)
+    # vault = None
+    @pytest.fixture(scope='class', name='vault')
+    def init_vault(self):
+        return htv.HtvVault(TEST_VAULT_DIR)
     # vault.add_resources()
     # vault.add('htb')
 
 
-    def test_init(self):
+    def test_init(self, vault):
         """Fresh init"""
-        assert self.vault.makedirs() == 0
+        assert vault.makedirs() == 0
 
-    def test_init_twice(self):
+    def test_init_twice(self, vault):
         """Vault already exists"""
-        assert self.vault.makedirs() == 1
+        assert vault.makedirs() == 1
 
-    def test_reset(self):
+    def test_reset(self, vault):
         """Reset an existing vault"""
-        assert self.vault.makedirs(reset=True) == 0
+        assert vault.makedirs(reset=True) == 0
 
     @pytest.mark.parametrize('path', sorted((Path(__file__).parent / 'fixtures').glob('[0-9]*')))
-    def test_add_resource(self, path):
+    def test_add_resource(self, path, vault):
         with open(path, 'r') as file:
             res = htv.DataSources.load(file.read())  # Deserialize resource
-        self.vault.add_resources(res) # Add resources to the vault
+        vault.add_resources(res) # Add resources to the vault
         if isinstance(res, htv.HtvResource):
             assert res.path.exists()
         else:  # HtbPaths are parsed from lists
             for _ in res:
                 assert isinstance(_, htv.HtvResource) and _.path.exists()
 
-    def test_list_all(self):
-        assert len(self.vault.list_resources('all')) == 3
+    def test_list_all(self, vault):
+        assert len(vault.list_resources('all')) == 3
 
-    def test_list_no_results(self):
-        assert len(self.vault.list_resources('none')) == 0
+    def test_list_no_results(self, vault):
+        assert len(vault.list_resources('none')) == 0
 
-    def test_list_filtering_no_results(self):
-        assert len(self.vault.list_resources('htb.mod', regex='random')) == 0
+    def test_list_filtering_no_results(self, vault):
+        assert len(vault.list_resources('htb.mod', regex='random')) == 0
 
-    def test_list_filtering_one_results(self):
-        assert len(self.vault.list_resources('htb.mod', regex='javascript-deobfuscation')) == 1
+    def test_list_filtering_one_results(self, vault):
+        assert len(vault.list_resources('htb.mod', regex='javascript-deobfuscation')) == 1
 
-    def test_list_filtering_many_results(self):
-        assert len(self.vault.list_resources('all', regex='e')) == 2
+    def test_list_filtering_many_results(self, vault):
+        assert len(vault.list_resources('all', regex='e')) == 2
 
-    def test_list_by_category(self):
+    def test_list_by_category(self, vault):
         # Run this test after all other list_resources() test. Cache needs to be set up for next test
-        assert len(self.vault.list_resources('htb.mod')) == 3
+        assert len(vault.list_resources('htb.mod')) == 3
 
     @pytest.mark.parametrize(
         'selector,expected', [
@@ -95,13 +88,13 @@ class TestVault:
             (3, 'getting-started'),
             ('solar', 'solar')
         ])
-    def test_use_one_resource(self, selector, expected):
-        assert self.vault.use_resource(selector).name == expected
+    def test_use_one_resource(self, selector, expected, vault):
+        assert vault.use_resource(selector).name == expected
 #
 #     # def test_use_many_resources(self):
 #     #     assert len(self.vault.use_resource(*range(1, len(self.vault.list_resources('all')) + 1))) == 11
 #     #
-    def test_clean(self):
+    def test_clean(self, vault):
         # create dummy files and folders in vault
         dummies = [
             'htb/academy/module/.dummy1',
@@ -111,27 +104,27 @@ class TestVault:
             'personal/exercise/.dummy5'
         ]
         for d in dummies[:3]:  # Temp files
-            (self.vault.path / d).touch()
+            (vault.path / d).touch()
         for d in dummies[3:]:  # Temp Directories
-            os.makedirs(self.vault.path / d)
-        self.vault.clean()
-        assert True not in [(self.vault.path / d).exists() for d in dummies]  # assert dummy files do not exist
+            os.makedirs(vault.path / d)
+        vault.clean()
+        assert True not in [(vault.path / d).exists() for d in dummies]  # assert dummy files do not exist
 #
-    def test_rm_res_by_name(self):
-        assert self.vault.remove_resources('web-requests') == 1
+    def test_rm_res_by_name(self, vault):
+        assert vault.remove_resources('web-requests') == 1
 
-    def test_rm_res_by_index(self):
+    def test_rm_res_by_index(self, vault):
         # javaScript-deobfuscation module
-        assert self.vault.remove_resources(2) == 1
+        assert vault.remove_resources(2) == 1
 
-    def test_rm_res_unknown_index(self):
-        assert self.vault.remove_resources(-1) == 0
+    def test_rm_res_unknown_index(self, vault):
+        assert vault.remove_resources(-1) == 0
 
-    def test_rm_res_unknown_name(self):
-        assert self.vault.remove_resources('random-res') == 0
+    def test_rm_res_unknown_name(self, vault):
+        assert vault.remove_resources('random-res') == 0
 
-    def test_removedirs(self):
+    def test_removedirs(self, vault):
         input("Press enter to finish")
-        self.vault.removedirs()
+        vault.removedirs()
         assert not Path(os.path.expandvars(TEST_VAULT_DIR)).exists()
 

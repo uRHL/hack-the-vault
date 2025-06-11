@@ -9,6 +9,8 @@
 
 **Hack the Vault**, abbreviated (**HTV**), is tool to efficiently manage your hacking write-ups and notes. Initially HTV was designed for [Hack The Box (HTB)](https://www.hackthebox.com/), for that reason the vault has that directory structure. Nevertheless, you can use it for any type of write-up or hacking project.
 
+> [CLI and library documentation](https://urhl.github.io/hack-the-vault/)
+
 #### The _goodbook_
 
 As you progress in your path as a hacker, you will learn more and more techniques, technologies, scenarios, ... 

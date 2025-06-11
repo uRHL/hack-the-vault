@@ -30,7 +30,6 @@ jobs:
 
       - name: Build Sphinx documentation
         run: |
-          cd docs
           sphinx-build -b 'html' docs/source docs/build/ 
           # make html
 

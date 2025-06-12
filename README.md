@@ -11,7 +11,7 @@
 
 > [CLI and library documentation](https://urhl.github.io/hack-the-vault/)
 
-#### The _goodbook_
+#### The _cookbook_
 
 As you progress in your path as a hacker, you will learn more and more techniques, technologies, scenarios, ... 
 Knowledge is power, and since human memory sometimes fails, a good _notebook_ can save you tons of time and headaches. HTV helps you to keep this notebook structured and organized so you can get most benefit from it.
@@ -46,16 +46,17 @@ Share your discoveries and achievements by setting up a blog in few minutes, dir
 # 1. Select installation directory
 TOOLS_DIR=$HOME/Documents/00-tools
 REPO_DIR=$TOOLS_DIR"/hack-the-vault"
+mkdir -p $TOOLS_DIR
 
 # 2. Clone the tool repo
-git clone https://github.com/uRHL/hack-the-vault.git $REPO_DIR
-cd $REPO_DIR
+git clone https://github.com/uRHL/hack-the-vault.git $REPO_DIR && cd $REPO_DIR
+
 # 3. Install dependencies
-python3 -m venv venv                 # Create a virtual environment
-source venv/bin/activate             # Activate the virtual env
-pip install -r requirements.txt      # Install dependencies
-deactivate                           # Dependencies installed, venv may be deactivated now
-chmod a+x $REPO_DIR/htv/__main__.py  # Grant execution permissions
+python3 -m venv venv                     # Create a virtual environment
+source venv/bin/activate                 # Activate the virtual env
+pip install -r requirements.txt          # Install dependencies
+deactivate                               # Dependencies installed, venv may be deactivated now
+chmod a+x $REPO_DIR/src/htv/__main__.py  # Grant execution permissions
 
 # 4. Create aliases (shortcuts)
 echo -e '\n# Hack-the-vault' >> ~/.bashrc

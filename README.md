@@ -56,11 +56,14 @@ source venv/bin/activate             # Activate the virtual env
 pip install -r requirements.txt      # Install dependencies
 deactivate                           # Dependencies installed, venv may be deactivated now
 chmod a+x $REPO_DIR/htv/__main__.py  # Grant execution permissions
+
 # 4. Create aliases (shortcuts)
-echo 'alias hack-the-vault="source $REPO_DIR/venv/bin/activate && $REPO_DIR/src/htv/__main__.py"' >> ~/.bashrc
+echo -e '\n# Hack-the-vault' >> ~/.bashrc
+echo 'alias hack-the-vault="source '$REPO_DIR'/venv/bin/activate && '$REPO_DIR'/src/htv/__main__.py"' >> ~/.bashrc
 echo 'alias htv="hack-the-vault"' >> ~/.bashrc
+
 # 5. Reload session
-source 
+source ~/.bashrc
 ```
 
 

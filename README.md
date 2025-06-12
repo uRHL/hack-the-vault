@@ -53,12 +53,14 @@ cd $REPO_DIR
 # 3. Install dependencies
 python3 -m venv venv                 # Create a virtual environment
 source venv/bin/activate             # Activate the virtual env
-pip install -r requirements          # Install dependencies
+pip install -r requirements.txt      # Install dependencies
 deactivate                           # Dependencies installed, venv may be deactivated now
 chmod a+x $REPO_DIR/htv/__main__.py  # Grant execution permissions
 # 4. Create aliases (shortcuts)
 echo 'alias hack-the-vault="source $REPO_DIR/venv/bin/activate && $REPO_DIR/src/htv/__main__.py"' >> ~/.bashrc
 echo 'alias htv="hack-the-vault"' >> ~/.bashrc
+# 5. Reload session
+source 
 ```
 
 
@@ -75,101 +77,30 @@ python3 htv/__main__.py -h
 
 ## Configuration
 
-Configuration file (`$REPO_DIR/conf.json`) contain some configuration parameters like the vault directory or the automatic check of dependencies update. You can change this configuration at any time.
+Configuration file (`$REPO_DIR/conf.yml`) contain some configuration parameters like the vault directory or the automatic check of dependencies update. You can change this configuration at any time.
 
-To disable the automatic check for updates modify the configuration file (install-dir/conf.json)
+To disable the automatic check for updates modify the configuration file (`$REPO_DIR/conf.yml`)
 
 
 ## Vault structure
 The vault has the following structure
 
 ```
-hack-vault
-├── academy
-│   ├── modules
-│   │   ├── prompt-injection-attacks  # Module name
-│   │   │   ├── 01_introduction_to_prompt_engineering.md  # Section name
-│   │   │   ├── 02_introduction_to_prompt_injection.md
-│   │   │   ├── 03_direct_prompt_injection.md
-│   │   │   ├── 04_indirect_prompt_injection.md
-│   │   │   ├── 05_introduction_to_jailbreaking.md
-│   │   │   ├── index.md
-│   │   │   ├── info.json
-│   │   │   └── resources  # Images, videos, files or other resources relevant for the module
-│   └── paths  # Soft-links to modules
-│       ├── job-role-paths
-│       │   └── ai-red-teamer
-│       │       ├── index.md
-│       │       └── info.json
-│       └── skill-paths
-│           └── cracking-into-hack-the-box
-│               ├── index.md
-│               └── info.json
-├── ctf
-├── lab
-│   ├── battlegrounds
-│   ├── challenges
-│   │   └── flag-command
-│   │       ├── evidences  # Screenshots, files, strings and any other relevant evidence
-│   │       │   └── screenshots
-│   │       ├── info.json  # metadata
-│   │       ├── sol.pdf  # Official solution
-│   │       └── writeup.md  # My writeup, built from template and info.json
-│   ├── fortress
-│   │   └── jet
-│   │       ├── evidences
-│   │       │   └── screenshots
-│   │       ├── info.json
-│   │       ├── sol.pdf
-│   │       └── writeup.md
-│   ├── machines
-│   │   └── eureka
-│   │       ├── evidences
-│   │       │   └── screenshots
-│   │       ├── info.json
-│   │       ├── sol.pdf
-│   │       └── writeup.md
-│   ├── pro-labs
-│   │   └── solar
-│   │       ├── index.md
-│   │       ├── info.json
-│   │       └── targets  # Each of the machines of the pro-lab
-│   │           ├── solar-inner
-│   │           │   ├── evidences
-│   │           │   │   └── screenshots
-│   │           │   └── writeup.md
-│   │           ├── solar-outer
-│   │           │   ├── evidences
-│   │           │   │   └── screenshots
-│   │           │   └── writeup.md
-│   │           └── solar-sun
-│   │               ├── evidences
-│   │               │   └── screenshots
-│   │               └── writeup.md
-│   ├── sherlocks
-│   │   └── dream-job-1
-│   │       ├── evidences
-│   │       │   └── screenshots
-│   │       ├── info.json
-│   │       ├── sol.pdf
-│   │       └── writeup.md
-│   ├── starting-point
-│   │   └── responder
-│   │       ├── evidences
-│   │       │   └── screenshots
-│   │       ├── info.json
-│   │       ├── sol.pdf
-│   │       └── writeup.md
-│   └── tracks  # Soft-links to machines and challenges
-│       └── ics-and-scada-exploitation
-│           ├── index.md
-│           └── info.json
-└── vpn  # Vpn configuration files
-    ├── vpn1.ovpn
-    └── vpn2.ovpn
-
+vault
+├── category-1
+│   ├──sub-cat-1
+│   │  ├── resource-1
+│   │  │   ├── info.yml
+│   │  │   ├── README.md
+│   │  │   ├── custom_file.txt
+│   │  │   └── ...
+│   │  ├── resource-2
+│   │  └── ...
+│   ├──sub-cat-2
+│   └── ...
+├── category-2
+└── ...
 ```
-
 
 ## Tests
 
@@ -188,7 +119,7 @@ pytest --cov --cov-report=html:tests/coverage-report
 
 > Recommended: Use a col quote for the repository description
 
-Create a **public empty repository**, no template, no .gitignore, no README, no license.
+Create a **private empty repository**, no template, no .gitignore, no README, no license.
 Then update the vault's git configuration to add the remote and push the changes.
 
 > You will be requested to authenticate yourself in GitHub. SSH keys are the safe way. 
@@ -202,12 +133,12 @@ git push -u origin main  # Set upstream for git pull/status
 
 ## Annex B: Setting-up GitHub pages
 
-Your vault repositories should look like this
+Your GitHub repositories should look like this:
 ```
-user
-  hacks-vault #blog
+username
+  hacks-vault (blog)
   hacks-vault-private
-    @hacks-vault #submodule
+    @hacks-vault (submodule)
 ```
 
 1. Install htv
@@ -231,12 +162,19 @@ If you want to use the web blog version (either for you or to share it)
    5. Configure GitHub Actions to automatically build your site when pushing changes
 2. Add submodule to your private repo. The submodule is the public version of hacks-vault
 
+## Creating add-ons
 
-## Select your VPN
+To create a new add-on create a new directory `hack-the-vault/src/datasources/your-add-on` with the following structure:
 
-If it is the first time you are using HTB, check out their tutorial: Introduction to lab access. They will tell you how to select and download the VPN configuration file from your HTB profile page.
-
-Once you have downloaded your VPN configuration file, save it in your vault in the directory `vpn`.
+```
+src/datasources/my-add-on/
+├── __init__.py  # Python module declaration
+├── ds.py        # Add-on source code (classes and functions)
+├── toolkit.js   # Web scrapper
+├── README.md    # Add-on description and useful information
+├── tests        # Tests
+└── _layouts     # Custom templates used by the add-on
+```
 
 ## Set up Git SSH
 
@@ -266,10 +204,6 @@ echo -e 'Host github.com\n\tUser git\n\tIdentityFile ~/.ssh/gh' >> ~/.ssh/config
 
 The vault is a collection of files so it may be exported as a regular folder, copied into an usb memory, zipped, ... Nevertheless, the recommended option is to use git and a hosting service of your choice.
 
-> VPN configuration files are not synchronized in the repository, 
-> thus you will need to copy/paste those files or download them again from HTB page.
-
-
 The vault itself is a repository so you just need to [set up the remote](#annex-a-updating-remote-repository) and push the changes to **_export_** your vault.
 To **_import_** a vault, just go to your vault directory and clone the repository were you are synchronizing the changes.
 
@@ -277,7 +211,7 @@ To **_import_** a vault, just go to your vault directory and clone the repositor
 # Importing a vault
 VAULT_DIR=$HOME/Documents/01-me/vaults  # recommended location 
 mkdir -p $VAULT_DIR; cd $VAULT_DIR
-git clone https://github.com/username/writeup-vault.git  # Clone from the remote
+git clone https://github.com/username/your-vault.git  # Clone from the remote
 ```
 
 ## DEV: Updating the documentation
@@ -324,15 +258,9 @@ ra-moon
 - [ ] Complete pyproject.toml
 - [ ] DOCS (sphinx and README)
   - [ ] Add section 'Setup GitHub pages'
-- [ ] Create remote repo or use existing one
-
-Right now HTK supports these parsers (JS and Python).
-
-- Implemented
-  - Academy: Module, Path
-  - Lab: Starting-point, Machine, Challenge, Sherlock, Track, Pro-lab, Fortress
-- Not implemented
-  - Lab: Battlegrounds
+- [ ] Templater.front_matter() => metadata + custom args
+- [ ] Simulate vault creation and population with my vaults
+- [ ] Add sub-module
 
 ```
 HtvResource
@@ -347,23 +275,5 @@ mch: htb/lab/machines
 cat:
   name:
 ```
-TODO: to_front_matter() => metadata + custom args
-
 
 Vault resources are organized in categories. Each category has its own README.md
-
-hack-vaults/
-  README.md
-  htb/
-    README.md
-    academy/
-      README.md
-      module/
-        README.md
-        mod_1/
-          README.md
-          ...
-        mod_2/
-          ...
-      skill-path/
-      job-role-path/

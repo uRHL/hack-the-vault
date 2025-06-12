@@ -11,29 +11,32 @@ sys.path.insert(0, str(ROOT_PKG))
 from htv.constants import VERSION, PROG_NAME, PROG_DESCRIPTION
 from htv.utils import CONF, FsTools, check_updates
 from htv.resources import HtvVault, DataSources
+from importlib import import_module
+
 import argparse
 
 
-def init_mode() -> int:
+
+def init_mode(args) -> int:
     """Init and/or reset the vault
 
     :return: 0 if vault initialized successfully. 1 otherwise
     """
-    return HtvVault(ARGS.root_dir).makedirs(reset=ARGS.reset)
+    return HtvVault(args.root_dir).makedirs(reset=args.reset)
 
 
-def add_mode() -> int:
+def add_mode(args) -> int:
     """Add resource(s) to the vault
 
     :return: 0 on success. 1 on error
     """
-    if ARGS.json_data is None:
-        return HtvVault().add_resources(ARGS.t)
+    if args.json_data is None:
+        return HtvVault().add_resources(args.t)
     else:  # Add resource from json data
-        return HtvVault().add_resources(DataSources.load(ARGS.json_data))
+        return HtvVault().add_resources(DataSources.load(args.json_data))
 
 
-def rm_mode() -> int:
+def rm_mode(args) -> int:
     """Remove resource(s) from the vault
 
     :return: 0 on success. 1 otherwise
@@ -45,44 +48,47 @@ def rm_mode() -> int:
                 print(f"[-] Deletion cancelled")
                 return False
             elif value in ['y', 'yes']:
-                print(f"[+] Deleting resources: {ARGS.targets}")
+                print(f"[+] Deleting resources: {args.targets}")
                 return True
             else:
                 print(f"> Please answer y/n")
-    if ARGS.y and not confirm_prompt(): # Ir confirm requested but not accepted, cancel operation
+    if args.y and not confirm_prompt(): # Ir confirm requested but not accepted, cancel operation
         return 0
 
-    if 'VAULT' in ARGS.targets:
+    if 'VAULT' in args.targets:
         print(f"[*] CAUTION: Deleting the entire vault")
         if confirm_prompt():
             return HtvVault().removedirs()
             # shutil.rmtree(CONF['VAULT_DIR'])
         return 0
-    return HtvVault().remove_resources(*ARGS.targets)
+    return HtvVault().remove_resources(*args.targets)
 
 
-def list_mode() -> int:
+def list_mode(args) -> int:
     """List resource(s) from the vault
 
     :return: 0 on success. 1 otherwise
     """
     # TODO: if categories is None, list parent categories only
-    HtvVault().list_resources(*ARGS.categories, regex=ARGS.name)
+    HtvVault().list_resources(
+        *args.categories,
+        regex=args.name if hasattr(args, 'name') else None
+    )
     return 0
 
 
-def use_mode() -> int:
+def use_mode(args) -> int:
     """Open resource(s) from the vault
 
     :return: 0 on success. 1 on error (resource not found)
     """
-    if HtvVault().use_resource(*ARGS.target) is None:
+    if HtvVault().use_resource(*args.target) is None:
         return 1
     else:
         return 0
 
 
-def clean_mode() -> int:
+def clean_mode(args) -> int:
     """Clean-up the vault
 
     :func:`resources.HtvVault.clean`
@@ -92,40 +98,7 @@ def clean_mode() -> int:
     return HtvVault.clean()
 
 
-def vpn_mode() -> int:
-    """Manage the VPN connection with HTB lab
-
-    :return: 0 on success. 1 on error
-    """
-    if ARGS.action == 'list':
-        ARGS.categories = ['vpn']
-        return list_mode()
-    elif ARGS.action == 'start':
-        if isinstance(ARGS.target, list):
-            ARGS.target = ARGS.target.pop()  # Use the indicated file
-        elif ARGS.target is None or len(ARGS.target) == 0:  # VPN not specified, get first match
-            try:
-                ARGS.target = CONF['VAULT_DIR'].glob('**/*.ovpn')[0]
-            except IndexError:
-                print("[!] VPN configurations not found. Download them from HTB page and save into 'vpn/' dir")
-                return 1
-        elif 'DEFAULT_VPN' in CONF:  # Using default configuration
-            # print(f"[*] Using default VPN configuration")
-            ARGS.target = CONF['DEFAULT_VPN']
-        use_mode()  # Use selected VPN
-        return CONF['_VPN'].start()  # Start selected VPN
-    elif '_VPN' not in CONF:
-        print(f"[-] VPN not running")
-        return 1
-    elif ARGS.action == 'stop':
-        return CONF['_VPN'].stop()
-    elif ARGS.action == 'status':
-        return CONF['_VPN'].status()
-    else:
-        return 1 # Unknown action
-
-
-def version_mode() -> int:
+def version_mode(args) -> int:
     """Print banner and version
 
     :return: 0 on success
@@ -139,7 +112,13 @@ def version_mode() -> int:
 def _parse_args():
     """Command-line interface configuration"""
     parser = argparse.ArgumentParser(prog=PROG_NAME, description=PROG_DESCRIPTION)
-    # parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-V', '--version',
+        help='Print version and exits',
+        action='store_true',
+        default=False
+    )
+
     # init vault CLI
     subparser = parser.add_subparsers(title='mode', dest='mode')
     vault_cli = subparser.add_parser(
@@ -149,7 +128,7 @@ def _parse_args():
     )
     vault_cli.add_argument(
         '--root-dir',
-        help='Path were the vault will be created, defaults to $HOME/Documents/vaults/htb'
+        help='Path were the vault will be created, defaults to $HOME/Documents/01-me/vaults'
     )
     vault_cli.add_argument(
         '-R', '--reset',
@@ -216,7 +195,7 @@ def _parse_args():
     # Use CLI
     use_cli = subparser.add_parser(
         name='use',
-        help='Uses the specified resource (Open file or enable VPN',
+        help='Open the specified resource',
         description='Opens the specified with your favorite text editor (Obsidian, Code, ...)'
     )
     use_cli.add_argument(
@@ -233,32 +212,17 @@ def _parse_args():
         description='Removes hidden directories, temp files and cache data created by text editors. '
              'We do not want them in the repo'
     )
-    # VPN CLI
-    vpn_cli = subparser.add_parser(
-        name='vpn',
-        help='Manage your VPN connections to HTB',
-        description='Manage your VPN connections to HTB'
-    )
-    vpn_cli.add_argument(
-        'action',
-        choices=['start', 'stop', 'status', 'list'],
-        default='list',
-        help='Action to be performed. Starts the VPN in the background. Stops the VPN, if it is running. '
-             'Prints the status of the vpn (active or not, logs, ...). List available VPNs (default).'
-    )
-    vpn_cli.add_argument(
-        'target',
-        metavar='NAME_ID',
-        # default=None,
-        nargs='*',
-        help='Name or ID of the vpn conf to be opened. To get the ID use the command `htv vpn list`. Defaults to value set in the configuration file'
-    )
-    parser.add_argument(
-        '-V', '--version',
-        help='Print version and exits',
-        action='store_true',
-        default=False
-    )
+
+    # Add add-on parsers
+    for _ in (ROOT_PKG / 'datasources').iterdir():
+        if _.is_dir() and (_ / '__init__.py').exists():
+            try:
+                _ = import_module(f"datasources.{_.name}")
+                if hasattr(_, 'add_subparser'):
+                    _.add_subparser(subparser)
+            except (ImportError, ModuleNotFoundError) as e:
+                print("[DEBUG]", e)
+                continue
     return parser.parse_args()
 
 
@@ -269,7 +233,13 @@ if __name__ == '__main__':
     if ARGS.version:
         ARGS.mode = 'version'
     try:
-        exit(eval(f"{ARGS.mode}_mode()"))
-    except NameError:
-        print(f"[!] Mode not specified. Use '-h' option to show modes")
-        exit(1)
+        globals()[f"{ARGS.mode}_mode"](ARGS)
+        exit(0)
+        # exit(eval(f"{ARGS.mode}_mode({ARGS})"))
+    except KeyError:
+        if hasattr(ARGS, f"{ARGS.mode}_mode"):
+            getattr(ARGS, f"{ARGS.mode}_mode")(ARGS)
+            exit(0)
+        else:
+            print(f"[!] Mode not specified. Use '-h' option to show modes")
+            exit(1)

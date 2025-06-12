@@ -59,11 +59,12 @@ deactivate                               # Dependencies installed, venv may be d
 chmod a+x $REPO_DIR/src/htv/__main__.py  # Grant execution permissions
 
 # 4. Create aliases (shortcuts)
-echo 'alias hack-the-vault="source $REPO_DIR/venv/bin/activate && $REPO_DIR/src/htv/__main__.py"' >> ~/.bashrc
+echo -e '\n# Hack-the-vault' >> ~/.bashrc
+echo 'alias hack-the-vault="source '$REPO_DIR'/venv/bin/activate && '$REPO_DIR'/src/htv/__main__.py"' >> ~/.bashrc
 echo 'alias htv="hack-the-vault"' >> ~/.bashrc
 
 # 5. Reload session
-source $HOME/.bashrc
+source ~/.bashrc
 ```
 
 

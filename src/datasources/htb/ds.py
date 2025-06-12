@@ -6,7 +6,8 @@ ROOT_PKG = Path(__file__).parents[3] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
 from htv.resources import HtvModule, HtvPath, HtvExercise, HtvVault, CustomResource, DataSources
-from htv.utils import CONF, FsTools
+from htv.utils import CONF, FsTools, add_extensions
+from htv.__main__ import use_mode, list_mode
 
 import subprocess
 import os
@@ -14,8 +15,10 @@ import re
 # TEMPLATE
 __root_category__ = 'htb'
 # TEMPLATE: __all__ = []
-__all__ = ['Vault', 'VpnClient', 'AcademyModule', 'AcademySkillPath', 'AcademyJobRolePath', 'LabStartingPoint',
-           'LabMachine', 'LabChallenge', 'LabSherlock', 'LabTrack', 'LabProLab', 'LabFortress', 'LabBattleground',]
+__all__ = ['Vault', 'VpnClient', 'add_subparser',
+           'AcademyModule', 'AcademySkillPath', 'AcademyJobRolePath',
+           'LabStartingPoint', 'LabMachine', 'LabChallenge', 'LabSherlock',
+           'LabTrack', 'LabProLab', 'LabFortress', 'LabBattleground', ]
 
 __default_metadata__ = dict(os=None,
             points=None,
@@ -23,6 +26,13 @@ __default_metadata__ = dict(os=None,
             targets=list(),
             release_date=None,
             related_academy_modules=None)
+
+__extensions__ = {
+    '.ovpn': 'htb.vpn'
+}
+
+add_extensions(**__extensions__)
+
 #######  B A S E   C L A S S E S  ####################
 
 class VpnClient(CustomResource):
@@ -383,7 +393,7 @@ class LabBattleground(HtvExercise):
         super().__init__(**__default_metadata__)
         # TODO: parser not implemented
 
-############################################################
+#######  D S   V A U L T  ####################
 
 # Template
 class Vault(HtvVault):
@@ -402,3 +412,60 @@ class Vault(HtvVault):
             ('vpn/README.txt', 'Download VPN conf file (.ovpn extension) from HTB page \n'),
             (self.path / 'ctf')
         ]
+
+#######  C L I   P A R S E R S  ####################
+
+def add_subparser(subparsers):
+
+    vpn_cli = subparsers.add_parser(
+        name='vpn',
+        help='Manage your VPN connections to HTB',
+        description='Manage your VPN connections to HTB'
+    )
+    vpn_cli.add_argument(
+        'action',
+        choices=['start', 'stop', 'status', 'list'],
+        default='list',
+        help='Action to be performed. Starts the VPN in the background. Stops the VPN, if it is running. '
+             'Prints the status of the vpn (active or not, logs, ...). List available VPNs (default).'
+    )
+    vpn_cli.add_argument(
+        'target',
+        metavar='NAME_ID',
+        nargs='*',
+        help='Name or ID of the vpn conf to be opened. To get the ID use the command `htv vpn list`. Defaults to value set in the configuration file'
+    )
+    vpn_cli.set_defaults(vpn_mode=handle_args)
+
+def handle_args(args) -> int:
+    """Manage the VPN connection with HTB lab
+
+    :return: 0 on success. 1 on error
+    """
+    if args.action == 'list':
+        args.categories = ['vpn']
+        return list_mode(args)
+    elif args.action == 'start':
+        if isinstance(args.target, list):
+            args.target = args.target.pop()  # Use the indicated file
+        elif args.target is None or len(args.target) == 0:  # VPN not specified, get first match
+            try:
+                args.target = CONF['VAULT_DIR'].glob('**/*.ovpn')[0]
+            except IndexError:
+                print("[!] VPN configurations not found. Download them from HTB page and save into 'vpn/' dir")
+                return 1
+        elif 'DEFAULT_VPN' in CONF:  # Using default configuration
+            # print(f"[*] Using default VPN configuration")
+            args.target = CONF['DEFAULT_VPN']
+        use_mode(args)  # Use selected VPN
+        return CONF['_VPN'].start()  # Start selected VPN
+    elif '_VPN' not in CONF:
+        print(f"[-] VPN not running")
+        return 1
+    elif args.action == 'stop':
+        return CONF['_VPN'].stop()
+    elif args.action == 'status':
+        return CONF['_VPN'].status()
+    else:
+        return 1  # Unknown action
+

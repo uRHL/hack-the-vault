@@ -6,7 +6,7 @@ import yaml
 ROOT_PKG = Path(__file__).parents[1] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
-from htv.constants import ROOT_DIR, CONF_PATH, DEPENDENCIES, RUNTIME_CONF, DEFAULT_CONF
+from htv.constants import CONF_PATH, DEPENDENCIES, RUNTIME_CONF, DEFAULT_CONF
 from collections.abc import Iterable
 from datetime import datetime
 from typing import TextIO, Any
@@ -117,10 +117,14 @@ class Conf(dict):
         try:
             with open(CONF_PATH, 'r') as file:
                 _data = yaml.safe_load(file)
-            if len(_data) != len(self._default):  # Missing some default keys
-                raise FileNotFoundError
-        except FileNotFoundError:
-            print(f"[!] Conf file not found or missing default configuration params")
+            for k in self._default:
+                if k not in _data:
+                    raise KeyError(f"Missing required configuration parameter '{k}'")
+        except (FileNotFoundError, KeyError) as e:
+            if isinstance(e, KeyError):
+                print(f"[!] '{e}'")
+            else:
+                print(f"[!] Conf file not found")
             self.reset()  # reset to default config
             self.load()  # Load configuration
         else:
@@ -537,6 +541,15 @@ def check_updates() -> int:
     else:
         print(f"[+] Dependencies updated successfully")
         return 0
+
+def add_extensions(**kwargs) -> None:
+    """Load add-on extensions
+
+    :param kwargs: Extensions to be added ext=cat. For example: `.ovpn='htb.vpn'`
+    """
+    _ext = CONF.get('EXTENSIONS', dict())
+    _ext.update(**kwargs)
+    CONF.update_values(EXTENSIONS=_ext)
 
 #####   D Y N A M I C   V A L U E S   #####
 

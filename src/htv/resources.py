@@ -725,7 +725,8 @@ class HtvVault:
         res_pool = list()
 
         if not self.path.exists():
-            print(f"[!] Vault not found ({self.path}). Initialize the vault first")
+            print(f"[!] Vault not found ({self.path})")
+            print(f"[*] For more information about initializing the vault use the command: htv init -h")
             return res_pool
         elif len(args) == 0 or 'all' in args:
             # TODO: iterate Datasources.get('all')
@@ -874,7 +875,7 @@ class DataSources:
                         resource = DataSources.load(yaml.safe_load(file))
                 except FileNotFoundError:
                     print(f"[-] Not a HtvResource. Missing info.yml ({data})")
-            else:  # Not a json. Try other saves files associations
+            else:  # Not a json. Try other files associations
                 for ext, class_name in CONF['EXTENSIONS'].items():
                     if data.name.endswith(ext):
                         resource = DataSources.get(class_name)

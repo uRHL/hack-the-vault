@@ -126,5 +126,6 @@ class TestVault:
     def test_removedirs(self, vault):
         input("Press enter to finish")
         vault.removedirs()
+
         assert not Path(os.path.expandvars(TEST_VAULT_DIR)).exists()
 

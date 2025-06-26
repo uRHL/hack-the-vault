@@ -1,0 +1,13 @@
+# IDE directories
+**/.obsidian
+**/.idea
+**/.code
+
+# Blog
+.blog/*
+
+# Virtual environments and cache
+**/venv
+**/.venv
+**/__venv__
+**/__pycache__

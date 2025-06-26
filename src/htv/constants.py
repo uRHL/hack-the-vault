@@ -45,6 +45,8 @@ CONF_PATH = ROOT_DIR / 'conf.yml'
 DEFAULT_CONF = dict(
         VAULT_DIR="$HOME/Documents/01-me/vaults/hacks-vault",
         CHECK_UPDATES=False,
+        EXTENSIONS=dict(),
+        DEFAULT_CAT='personal'
     )
 
 """Default configuration. These keys will only be included during runtime, but not saved to disk"""

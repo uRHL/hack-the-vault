@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 import webbrowser
 import subprocess
+import traceback
 import pyperclip
 import time
 import json
@@ -171,6 +172,8 @@ class Conf(dict):
         self.update_values(**self._default)  # Default conf values
         self.update_values(**self._runtime)  # Add runtime parameters
         self._save()
+        print(f"[*] Re-starting the application to apply the changes")
+        exit(0)
 
 
 class FsTools:
@@ -178,7 +181,7 @@ class FsTools:
     Static class to interact with files
     """
     @staticmethod
-    def dump_file(path, content: str = None, exists_ok: bool = False, **kwargs) -> None:
+    def dump_file(path, content: str | bytes = None, exists_ok: bool = False, **kwargs) -> None:
         """Dump content into file
 
         Dump the provided content into a file.
@@ -200,8 +203,12 @@ class FsTools:
             content = ''
         if content.startswith('t:'):  # Render template
             content = FsTools.render_template(content.split(':').pop(), path, **kwargs)
-        with open(path, 'w') as file:  # Dump content to file
-            file.write(content)
+        if isinstance(content, bytes):
+            with open(path, 'wb') as file:  # Dump content to file
+                file.write(content)
+        else:
+            with open(path, 'w') as file:  # Dump content to file
+                file.write(content)
 
 
     @staticmethod
@@ -277,10 +284,15 @@ class FsTools:
         :param template: template to be used from /templates
         :param out: output file to write the template. If None, just returns the rendered template
         :param kwargs: Additional arguments for the render
-        :return: The rendered template
+        :return: The rendered template. None if the render failed for any reason
         """
         kwargs.update({'templater': Templater})
-        _render = CONF['_JINJA_ENV'].get_template(template).render(kwargs)
+        try:
+            _render = CONF['_JINJA_ENV'].get_template(template).render(kwargs)
+        except TypeError:
+            print(f"[!] Failed to render the template '{template}'")
+            print(traceback.format_exc())
+            _render = ''
         if out is not None:
             FsTools.dump_file(out, _render, exists_ok=True)
         return _render
@@ -294,7 +306,7 @@ class FsTools:
 
         :return: Secured filename
         """
-        return re.sub('[ ,&-/:]+', '_', str(name)).lower()
+        return re.sub('[ ,&:-]+', '_', str(name)).lower()
 
     @staticmethod
     def secure_dirname(name) -> str:
@@ -306,7 +318,7 @@ class FsTools:
         :return: Secured dir name
         """
 
-        return re.sub('[ ,&-/:?]+', '-', str(name)).lower()
+        return re.sub('[ ,&:?-]+', '-', str(name)).lower()
 
 
     @staticmethod
@@ -391,6 +403,7 @@ class Git:
 
         :param msg: Message associated to the commit
         """
+        freeze_virtual_environments()
         subprocess.run('git add .', shell=True, check=True, cwd=CONF['VAULT_DIR'])
         subprocess.run(f'git commit -am "{msg}"', shell=True, check=True, cwd=CONF['VAULT_DIR'])
 
@@ -550,6 +563,31 @@ def add_extensions(**kwargs) -> None:
     _ext = CONF.get('EXTENSIONS', dict())
     _ext.update(**kwargs)
     CONF.update_values(EXTENSIONS=_ext)
+
+def freeze_virtual_environments():
+    """Create requirements.txt
+
+    Create requirements.txt from existing virtual environments found in the vault.
+    """
+    print("[*] Freezing virtual environments...")
+    bar = tqdm(list(filter(lambda x: x.is_dir(), CONF['VAULT_DIR'].glob('**/*venv*'))))
+    for p in bar:
+        _proc = subprocess.run(
+            f"bash -c 'source {p}/bin/activate && pip freeze > {p.parent / 'requirements.txt'}'",
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if _proc.stderr not in [None, '']:
+            bar.write(f"[!] Virtual env is corrupted or missing ({p})")
+            # bar.write(_proc.stderr)
+
+def flatten(lst):
+    for item in lst:
+        if isinstance(item, list):
+            yield from flatten(item)
+        else:
+            yield item
 
 #####   D Y N A M I C   V A L U E S   #####
 

@@ -8,9 +8,10 @@ import pytest
 
 class TestConf:
     test_values = dict(k1=1, k2=2, k3=3)
+    # By default 4 values are loaded: 4 default params, 1 runtime params
     default_len = len(htv.constants.DEFAULT_CONF) + len(htv.constants.RUNTIME_CONF)
+
     def test_init(self):
-        # By default 4 values are loaded: 3 default params, 1 runtime params
         assert len(CONF) == self.default_len
 
     def test_remove_non_existent(self):

@@ -5,7 +5,8 @@ import sys
 ROOT_PKG = Path(__file__).parents[1] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
-from htv.utils import CONF, FsTools, Templater, open_browser_tab, Git, Cache
+from htv.utils import CONF, FsTools, Templater, open_browser_tab, Git, Cache, flatten
+from json.decoder import JSONDecodeError
 from collections.abc import Iterable
 from typing import TextIO
 from htv import ROOT_DIR
@@ -21,18 +22,29 @@ import re
 __all__ = [
     'HtvVault', 'CustomResource', 'HtvResource', 'HtvPath', 'HtvModule', 'HtvExercise', 'DataSources'
 ]
-# todo info.name or metadata.name ==> metadata.title
+
+def is_category(path: str | Path) -> bool:
+    if not Path(path).is_absolute():
+        path = CONF['VAULT_DIR'] / path
+    return (path / 'README.md').exists() and not (path / 'info.yml').exists()
+
+def is_resource(path: str | Path) -> bool:
+    if not Path(path).is_absolute():
+        path = CONF['VAULT_DIR'] / path
+    return (path / 'README.md').exists() and (path / 'info.yml').exists()
+
+
 class Metadata:
 
     def __init__(self):
         """Basic metadata info"""
         self.title = None
         self.tags = list()
-        self.url = None
+        self.url = '#'
         self.description = None
         self.difficulty = None
         self.status = None
-        self.logo = None
+        self.logo = '#'
         self.authors = list()
         self.creation_date = Templater.now()
         self.completion_date = None
@@ -52,16 +64,19 @@ class Metadata:
     def to_dict(self):
         return self.__dict__
 
+    def hasattr(self, name):
+        return hasattr(self, name)
+
 class CustomResource:
     # Code reference
     __type__ = None  # :str E.g. htb.mod
     # File reference
     __resource_dir__ = None  # :str E.g. academy/module
-    # Specific file extension associated to this resource
-    __file_ext__ = None # str: eg. .ovpn
 
-    def __init__(self):
-        pass
+
+    def __init__(self, _type: str = None, _resource_dir: str = None):
+        self.__type__ = _type
+        self.__resource_dir__ = _resource_dir
         # self._name = None # File name
 
     @property
@@ -74,18 +89,12 @@ class CustomResource:
         """
         return str(self.__resource_dir__).split('/')
 
-    # @property
-    # def backlink(self) -> str:
-    #     _link_parts = [  # Base link, home + resource name
-    #         f"[Home]({'../' * (len(self.categories) + 1)}README.md)", # Home link
-    #         self.name
-    #     ]
-    #     for ind, _ in enumerate(reversed(self.categories), 1):  # Add parent categories links
-    #         _link_parts.insert(1, f"[{_}]({'../' * ind}README.md)")
-    #     return ' > '.join(_link_parts)
-
-    # def front_matter(self):
-    #     pass
+    @property
+    def main_categories(self) -> list[str]:
+        if len(self.categories) >= 2:
+            return [self.categories[0], self.categories[-1]]
+        else:
+            return [self.categories[0]]
 
     @property
     def name(self) -> str:
@@ -93,8 +102,11 @@ class CustomResource:
         # re.sub('[ ,&-/:]+', '-', str(self._name)).lower()
         if hasattr(self, 'metadata'):
             return FsTools.secure_dirname(self.metadata.title)
-        else:
+        elif hasattr(self, '_name'):
             return FsTools.secure_dirname(getattr(self, '_name'))
+        else:
+            print("DEBUG: No name:", self.to_dict(include_private=False))
+            return ''
 
     @property
     def path(self) -> Path:
@@ -107,19 +119,24 @@ class CustomResource:
     def __repr__(self) -> str:
         return f"{Templater.class_str(self)}({self.name})"
 
-    def to_dict(self) -> dict:
+    def to_dict(self, include_private: bool = True) -> dict:
         """
-
+        :param include_private: If True, private attributes (starting with '_') are also serialized
         :return: dict representation of this HtbResource
         """
-        _data = dict(
+        _data = dict[str:str|dict|list](
             __type__=self.__type__,
             # __resource_dir__=self.__resource_dir__  # Ignore this attribute
         )
         for k, v in vars(self).items():
-            if k.startswith('_'):  # Replace private attributes by their getter
-                k = k.replace('_', '')
-                v = self.__getattribute__(k)
+            if k.startswith('__'):
+                continue # Always skip static attributes
+            elif k.startswith('_') :  # Replace private attributes by their getter
+                if include_private:
+                    k = k.replace('_', '')
+                    v = self.__getattribute__(k)
+                else:
+                    continue # Skipping private attributes
             if isinstance(v, str | int | float | dict | None):
                 _data[k] = v
             elif isinstance(v, CustomResource | Metadata):
@@ -157,14 +174,71 @@ class CustomResource:
         :param regex: Regex to be applied on the resource name to filter the results. Wildcards allowed. If None, no filtering
         :return: A list with the resources found in local vault
         """
-        regex = '*' if regex is None else regex
-        return DataSources.load(
-            filter(lambda x: x.is_dir(), (CONF['VAULT_DIR'] / self.__resource_dir__).glob(regex))
+        regex = '*' if regex in [None, ''] else regex
+        print("[#] Listing:", self, self.__resource_dir__)
+        if self.__resource_dir__ is None:
+            return [self.path]
+        _ret = DataSources.load(
+            list(filter(lambda x: x.is_dir(), (CONF['VAULT_DIR'] / self.__resource_dir__).glob(regex)))
         )
+        # print("[#] Resources found:", _ret)
+        return _ret
+
 
     def open(self):
         print(f"[*] Using resource '{self.name}' ...")
         pass
+
+    def __dir_struct__(self, *args) -> list:
+        return [
+            ('README.md', 't:custom.md', dict(resource=self)),
+            ('info.yml', yaml.dump(self.to_dict())),
+            *args
+        ]
+
+    def makedirs(self):
+        FsTools.dump_files(self.__dir_struct__(), root_dir=self.path)
+
+class FileResource(CustomResource):
+
+    # Specific file extension associated to this resource
+    __file_ext__ = ''  # str: eg. .ovpn
+
+    def __init__(self, name: str, extension: str = None, categories: str | Path = None):
+        if extension is None:
+            self.__file_ext__ = ''
+        elif str(extension).startswith('.'):
+            self.__file_ext__ = str(extension)
+        else:
+            raise ValueError("_file_ext must start with '.'")
+
+        self._name = None
+        self.name = name
+        super().__init__(
+            _type='file',
+            _resource_dir=CONF['DEFAULT_CAT'] if categories is None else categories
+        )
+
+    @property
+    def name(self):
+        return f"{self._name}{self.__file_ext__}"
+
+    @name.setter
+    def name(self, value: str):
+        if os.path.splitext(value)[1] in ['', self.__file_ext__]:
+            self._name = FsTools.secure_filename(value.replace(self.__file_ext__, ''))
+        else:
+            raise ValueError("File extension does not match resource.__file_ext__")
+
+    def __dir_struct__(self, *args) -> list:
+        raise NotImplemented("FileResources are only files, no directories")
+
+    def makedirs(self):
+        try:
+            FsTools.dump_file(self.path, b'')
+        except FileExistsError:
+            print(f"[-] Resource already exists: {self.path.name}")
+
 
 class HtvResource(CustomResource):
     """
@@ -179,7 +253,10 @@ class HtvResource(CustomResource):
 
     def __init__(self, **kwargs):
         """Initializes a HtvResource instance"""
-        super().__init__()
+        super().__init__(
+            kwargs.pop('_type') if '_type' in kwargs else None,
+            kwargs.pop('_resource_dir') if '_resource_dir' in kwargs else None
+        )
         self._metadata = Metadata()
         self._metadata.update(**kwargs)
 
@@ -230,22 +307,22 @@ class HtvResource(CustomResource):
         #     json.dump(self.__dict__, file)
         # FsTools.dump_files(args, root_dir=self.path)  # Add custom files
         FsTools.dump_files([
-            ('info.yml', yaml.dump(self.to_dict(), default_flow_style=True)), # Flat lists and dicts
+            ('info.yml', yaml.dump(self.to_dict())),#, default_flow_style=True)), # Flat lists and dicts
             # ('info.json', json.dumps(self.to_dict())),
             *self.__dir_struct__()
         ], root_dir=self.path, exists_ok=True)
 
         # Create parent categories if they do not exist
-        for _ in range(1, len(self.categories) + 1):
-            # if not os.path.exists(CONF['VAULT_DIR'] / f"{'/'.join(self.categories[:_])}/README.md"):
-            FsTools.dump_file(
-                CONF['VAULT_DIR'] / f"{'/'.join(self.categories[:_])}/README.md",
-                't:category.md',
-                exists_ok=True,
-                resource=Path('/'.join(self.categories[:_])),
-                VAULT_DIR=CONF['VAULT_DIR']
-                # index=(CONF['VAULT_DIR']/Path('/'.join(self.categories[:_]))).glob('[a-z]*')
-            )
+        # for _ in range(1, len(self.categories) + 1):
+        #     # if not os.path.exists(CONF['VAULT_DIR'] / f"{'/'.join(self.categories[:_])}/README.md"):
+        #     FsTools.dump_file(
+        #         CONF['VAULT_DIR'] / f"{'/'.join(self.categories[:_])}/README.md",
+        #         't:category.md',
+        #         exists_ok=True,
+        #         resource=Path('/'.join(self.categories[:_])),
+        #         VAULT_DIR=CONF['VAULT_DIR']
+        #         # index=(CONF['VAULT_DIR']/Path('/'.join(self.categories[:_]))).glob('[a-z]*')
+        #     )
 
     def open(self) -> None:
         """Open the resource
@@ -267,6 +344,7 @@ class HtvResource(CustomResource):
             ROOT_DIR / f"src/htv/datasources/{self.categories[0]}/toolkit.js",
             _stdout=_stdout
         )
+
 
 class HtvModule(HtvResource):
     """
@@ -366,6 +444,7 @@ class HtvModule(HtvResource):
         """
         return self.sections.pop(index)
 
+
 class HtvPath(HtvResource):
     """**Abstract class** representing a Path in the HTB academy
 
@@ -427,6 +506,7 @@ class HtvPath(HtvResource):
                 if isinstance(st, HtvModule | HtvExercise):
                     st.makedirs()
             bar.update(1)
+
 
 class HtvExercise(HtvResource):
     """**Abstract class** representing a resource from HTB lab
@@ -534,9 +614,10 @@ class HtvExercise(HtvResource):
         # Switch to gh-pages branch
 
         # Add front matter
-        # Extract linked resources (images, files, etc)
+        # Extract linked resources (images, files, etc.)
         # add linked resources to VAULT_DIR/docs/assets
         pass
+
 
 class HtvVault:
     """
@@ -624,7 +705,7 @@ class HtvVault:
 
     def __dir_struct__(self) -> list:
         return [
-            ('.gitignore', 'vpn/\n.obsidian\n'),
+            ('.gitignore', 't:gitignore.txt'),
             ('README.md', 't:vault.md'),
         ]
 
@@ -665,8 +746,81 @@ class HtvVault:
         """
         print(f"[!] Deleting the entire vault")
         shutil.rmtree(self.path)
-        # CONF.reset()  # Reset configuration so VAULT_DIR points to default location again
+        CONF.reset()  # Reset configuration so VAULT_DIR points to default location again
         return 0
+
+    def add_resource(self, data: str | HtvResource, category: str = None, layout: str = None, _stdout: tqdm | TextIO = sys.stdout):
+        """Add a resource to the vault
+
+        :param data: Resource data. It may be a name, a json-serialized resource, or a HtvResource object
+        :param category: Resource categories
+        :param layout: Template name.
+        :param _stdout: Output stream
+        :return: 0 on success, 1 on error
+        """
+        # TODO: create an empty resource with name 'name', in the category 'personal', using template 'custom'
+        layout = 'custom' if layout is None else layout
+        category = CONF['DEFAULT_CAT'] if category is None else category
+
+        if not self.path.exists():
+            print(f"[!] Vault not initialized. Run `htv init -h` for more information")
+            return 1
+
+        if layout == 'file' and data is None:
+            print(f"[-] Cannot create FileResource. Missing parameter 'data'")
+            return 1
+        elif layout == 'file':
+            resource = FileResource(data, categories=category)
+        elif layout == 'custom':
+            resource = CustomResource(_type='custom', _resource_dir=category)
+        elif layout  == 'module':
+            resource = HtvModule(_resource_dir=category)
+        elif layout == 'path':
+            resource = HtvPath(_resource_dir=category)
+        elif layout == 'exercise':
+            resource = HtvExercise(_resource_dir=category)
+        else:
+            print(f"[-] Unknown layout '{layout}'")
+            return 1
+
+        if data is None:
+            # If JS toolkit exists so resource can be parsed from web page
+            # Use only parent category name to lookup for the JS toolkit
+            if (ROOT_PKG / f"datasources/{category.split('/')[0]}/toolkit.js").exists():
+                # self.copy_js_toolkit(category)  # Js tools copied to clipboard
+                FsTools.copy_js_toolkit(ROOT_PKG / f"datasources/{category.split('/')[0]}/toolkit.js")
+                try:
+                    self.add_categories(category)
+                    self.add_resources(DataSources.load(input('>> json: ')))  # Add resource, info from stdin
+                except KeyboardInterrupt:
+                    _stdout.write(f"\n[-] Operation cancelled\n")
+                    return 0
+            else:
+                # if category == 'personal':
+                _stdout.write(f"[!] Resource not created. Missing Name or json data.\n")
+                return 1
+        elif isinstance(data, CustomResource):
+            _stdout.write(f"[*] Adding resource {resource.__repr__()}\n")
+            # Create categories if needed
+            self.add_categories('/'.join(resource.categories))
+            resource.makedirs()
+            return 1
+            # TODO: create base class BasicResource, which represents a custom object in the vault
+            # This resource does not have makedirs, and some other methods, which are only included in HtvResource
+        else:
+            _stdout.write(f"[*] Adding resource {resource.__repr__()}\n")
+            self.add_categories(category)
+            try:  # Data is a json string
+                return self.add_resource(DataSources.load(data))
+            except JSONDecodeError:  # Data is the resource name
+                # meta = Metadata()
+                # meta.update(title=str(data))
+                # resource.metadata = meta
+                resource.metadata.update(title=str(data))
+                return resource.makedirs()
+
+
+
 
     def add_resources(self, res: HtvResource | list[HtvResource], _stdout: tqdm | TextIO = sys.stdout) -> int:
         """Add resource(s) to the vault
@@ -675,35 +829,45 @@ class HtvVault:
         :param _stdout: Stdout to log information. Default to STDOUT
         :return: number of resources added successfully
         """
-        # try:
         _ret = 0
-        if res is None:  # Try to load Resource from json
-            self.copy_js_toolkit()  # Js tools copied to clipboard
-            _ret += self.add_resources(DataSources.load(input('>  json: ')))  # Add resource, info from stdin
-        elif isinstance(res, HtvResource):
-            _stdout.write(f"[*] Adding resource {res.__repr__()}\n")
-            # print(f"[*] Adding resource {res}")
-            res.makedirs()
-            # print(f"[+] Resource added {res}")
-            # _stdout.write(f"[+] Resource added {res}\n")
-            _ret = 1
-            # TODO: create base class BasicResource
-            # which represents a custom object in the vault
-            # This resource does not have makedirs, and some other methods, which are only included in HtvResource
+        if isinstance(res, HtvResource):
+            _ret += 1 if self.add_resource(res, _stdout=_stdout) == 0 else 0
         elif isinstance(res, list):
             bar = tqdm(res, unit='resource')
             for item in res:
-                _ret += self.add_resources(item)#, stdout=bar)
+                _ret += self.add_resources(item, _stdout=bar)
                 bar.update(1)
             print(f"[+] {len(res)} resource(s) added successfully")
         else:
             print(f"[-] Not a HtvResource ({type(res)})")
             _ret = 0
         return _ret
-        # except ValueError:
-        #     return 1
-        # else:
-        #     return 0
+
+    def add_categories(self, path: str):
+        """Add new categories to the vault
+
+        Creates a new directory and README for the provided categories.
+        Parent categories will be created if they do not exist.
+
+        :param path: Category path. For example: 'cat/sub-cat/sub-sub-cat'
+        """
+        path = Path(FsTools.secure_dirname(path))
+        _parent = ''
+        for _ in Path(FsTools.secure_dirname(path)).parts:
+            (self.path / f"{_parent}{_}").mkdir(exist_ok=True)
+            try:
+                FsTools.dump_file(
+                    self.path / f"{_parent}{_}/README.md",
+                    't:category.md',
+                    resource=Path(f"{_parent}{_}"),
+                    VAULT_DIR=self.path
+                )
+                print(f"[+] New category added: {_parent}{_}")
+            except FileExistsError:  # Category README already exists
+                continue
+            finally:
+                _parent += f"{_}/"
+
 
     def list_resources(self, *args, regex: str = None) -> list[Path]:
         """List resources from the vault
@@ -732,12 +896,18 @@ class HtvVault:
             # TODO: iterate Datasources.get('all')
             if regex is None:
                 regex = ''
-            res = list(filter(
-                lambda x: re.search(regex, x.path.name, re.I) is not None,
-                DataSources.get('all')
-            ))
-            print_ordered(*res, start_idx=1)
-            res_pool.extend([_.path for _ in res])
+            if self.__resources__ is None:
+                res = list(filter(
+                    lambda x: re.search(regex, x.path.name, re.I) is not None,
+                    DataSources.get('all')
+                ))
+                print_ordered(*res, start_idx=1)
+                res_pool.extend([_.path for _ in res])
+            else:
+                res = list()
+                for _ in self.__resources__:
+                    res.extend(_().list_resources(regex=regex))
+                return res
         else:  # Get specific category
             for rtype in args:
                 res = DataSources.get(rtype)
@@ -747,7 +917,61 @@ class HtvVault:
                     res_pool.extend([_.path for _ in res_items])
         Cache.set(res_pool)
         if len(res_pool) == 0:
-            print(f"[-] No search results for [{args} regex: {regex}]")
+            print(f"[-] No resources found ({', '.join(args)}{'' if regex is None else f', regex: {regex}'})")
+            print(f"[*] Add a new resource with `htv add`")
+        return res_pool
+
+    def list_category(self, path: str | Path = None, regex: str = None):
+
+        def print_ordered(*items, start_idx: int = 0):
+            if len(items) > 0:
+                _div = '-' * 30
+                header = f"\n{' - '.join(items[0].main_categories).upper()}"
+                # start = len(res_pool) + 1
+                print(f"{header}{'' if regex is None else f' (filter: {regex})'}\n{_div}")
+                print(*[f"{f'{ind}. ' if ind <= 9 else f'{ind}.'} {item}" for ind, item in enumerate(items, start_idx)],
+                      _div, sep='\n')
+
+
+        res_pool = list()
+        if path is None:
+            # TODO list Root vault only
+            regex = '' if regex is None else str(regex)
+            res = list(filter(
+                lambda x: re.search(regex, x.path.name, re.I) is not None,
+                DataSources.get('all')
+            ))
+            print_ordered(*res, start_idx=1)
+            res_pool.extend(res)
+            # res_pool.extend([_.path for _ in res])
+        elif is_category(path):  # Recursive call to list contained categories/resources
+            # TODO: ignore hidden files (starting with '.')
+            res_pool.extend(
+                list(flatten([self.list_category(f) for f in sorted((self.path / path).glob('*')) if f.name != 'README.md']))
+            )
+        elif is_resource(path) or path.is_file():
+            return DataSources.load(path)  # Load HtvResource, CustomResource, or FileResource
+        else:
+            print(f"[-] Cannot list '{path}'")
+            return None
+
+        # TODO: group resources by Class: HtbModule, HtbMachine, ...
+        dicto = dict()
+        path_pool = list()
+        for _ in res_pool:
+            key = '/'.join(_.main_categories)
+            if key in dicto:
+                dicto.update({key: dicto[key] + [_]})
+            else:
+                dicto[key] = [_]
+            # path_pool.append(_.path)
+        for k, v in dicto.items():
+            print_ordered(v, start_idx=1)
+        Cache.set(path_pool)
+        if len(res_pool) == 0:
+            # print(f"[-] No resources found ({', '.join(args)}{'' if regex is None else f', regex: {regex}'})")
+            print(f"[-] No resources found ({path}{'' if regex is None else f', regex: {regex}'})")
+            print(f"[*] Add a new resource with `htv add`")
         return res_pool
 
     def use_resource(self, *args) -> HtvResource | list[HtvResource] | None:
@@ -780,30 +1004,10 @@ class HtvVault:
         for r in resources:
             r.post()
 
-    # def add_subvaults(self, name: str, default_files: Iterable = None):
-    #     """TODO: add initialize new category
-    #
-    #     :param name: Name for the category
-    #     :param default_files: Default files to be created with the category
-    #     """
-    #     """
-    #     cat-name/
-    #         info.json (vault.json)? with readme is really necessary?
-    #     """
-    #     # If subvault is defined in datasources/sources.yml get it from there
-    #     if DataSources.get(name) is not None:
-    #         self.sub_vaults.append(DataSources.get(name))
-    #         DataSources.get(name).makedirs()
-    #     else: # Create sub-vault from scratch
-    #         os.makedirs(name)
-    #         if default_files is not None:
-    #             FsTools.dump_files(default_files, root_dir=self.path / name)
-
-    def copy_js_toolkit(self) -> None:
-        FsTools.copy_js_toolkit(ROOT_DIR / f"src/htv/datasources/{self.path.name}/toolkit.js")
+    # def copy_js_toolkit(self, category: str) -> None:
+    #     FsTools.copy_js_toolkit(ROOT_PKG / f"datasources/{self.path.name}/toolkit.js")
 
 class DataSources:
-
     @staticmethod
     def get(category: str) -> HtvModule | HtvPath | HtvExercise | HtvVault | list[HtvVault] | None:
         with open(Path(__file__).parents[1] / 'datasources/sources.yml', 'r') as file:
@@ -867,6 +1071,7 @@ class DataSources:
         elif isinstance(data, Iterable) and not isinstance(data, str):  # Load several HtbResources
             return [DataSources.load(item) for item in iter(data)]
         elif Path(data).exists():  # Load data from YAML file
+            # resource-name OR res-name/info.yml ==> load resource
             if Path(data).is_dir():  # Get info.yml in that dir
                 data = Path(data) / 'info.yml'
             if data.name.endswith('info.yml'):
@@ -876,12 +1081,25 @@ class DataSources:
                 except FileNotFoundError:
                     print(f"[-] Not a HtvResource. Missing info.yml ({data})")
             else:  # Not a json. Try other files associations
+                _match = False
                 for ext, class_name in CONF['EXTENSIONS'].items():
                     if data.name.endswith(ext):
                         resource = DataSources.get(class_name)
                         resource.update(path=data)
+                        _match = True
+                        break
+                # If no match, create FileResource
+                if not _match: # data is a path that points to any other type of file
+                    resource = FileResource(
+                        data.name,
+                        extension=data.suffix,
+                        categories=str(data.relative_to(CONF['VAULT_DIR']))
+                    )
                 # return None
-        elif isinstance(data, str):  # Load data from JSON string
-            resource = DataSources.load(json.loads(data))
+        elif isinstance(data, str):  # Load serialized data from JSON/YML string
+            try:
+                resource = DataSources.load(json.loads(data))
+            except JSONDecodeError:
+                resource = DataSources.load(yaml.safe_load(data))
         return resource
 

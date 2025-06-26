@@ -30,10 +30,19 @@ def add_mode(args) -> int:
 
     :return: 0 on success. 1 on error
     """
-    if args.json_data is None:
-        return HtvVault().add_resources(args.t)
-    else:  # Add resource from json data
-        return HtvVault().add_resources(DataSources.load(args.json_data))
+    # args.category, args.type, args.data
+    # TODO: create new category if it does not exists
+    # _cat_path = CONF['VAULT_DIR'] / FsTools.secure_dirname(args.category)
+    # HtvVault().add_categories(args.category)
+    return HtvVault().add_resource(
+        args.data[0] if len(args.data) > 0 else None,
+        category=args.category,
+        layout=args.layout,
+    )
+    # else: #args.json_data is None
+    #     return HtvVault().add_resources(args.type)
+    # else:  # Add resource from json data
+    #     return HtvVault().add_resources(DataSources.load(args.json_data))
 
 
 def rm_mode(args) -> int:
@@ -140,17 +149,29 @@ def _parse_args():
     add_cli =subparser.add_parser(
         name='add',
         help='Add new htb resources to your vault',
-        description = 'Add new HTB resources to your vault'
+        description = 'Add new resources to your vault'
     )
-    add_cli_group = add_cli.add_mutually_exclusive_group()
-    add_cli_group.add_argument(
-        '-t',
+    # add_cli_group = add_cli.add_mutually_exclusive_group()
+    add_cli.add_argument(
+        '-c', '--category',
         # choices=list(RES_TYPES),
-        help="Type of resources to be added. If not specified it will be deduced from json data",
+        metavar='CAT',
+        default=CONF['DEFAULT_CAT'],
+        help="Category of the resource to be added. If will be created if does not exists",
     )
-    add_cli_group.add_argument(
-        '--json-data',
-        help='Resource details. This JSON is returned by toolkit.js when executed in a HTB resource page'
+    add_cli.add_argument(
+        '-l', '--layout',
+        metavar='LAYOUT',
+        choices=['module', 'path', 'exercise', 'file', 'custom'],
+        default='custom',
+        help="Resource layout. Defaults to 'blank', but it is deduced from json data if possible"
+    )
+    add_cli.add_argument(
+        'data',
+        nargs='*',
+        type=str,
+        metavar='NAME_DATA',
+        help='Name, or details in JSON format, of the resource to be added. This JSON is returned by the corresponding datasource toolkit.js when executed in the correspondent page.'
     )
     # Remove CLI
     remove_cli = subparser.add_parser(
@@ -175,8 +196,8 @@ def _parse_args():
     list_cli = subparser.add_parser(
         name='list',
         description='Shows Vault resources (modules, exercises, ...). '
-             f"Resource categories defined in htv/datasources/sources.yml",
-        help='Shows local HTB resources (modules, machines, VPNs)'
+             f"Resource categories defined in src/datasources/sources.yml",
+        help='Shows local resources (modules, machines, exercises, custom, ...)'
     )
     list_cli.add_argument(
         '-n', '--name',
@@ -228,6 +249,7 @@ def _parse_args():
 
 if __name__ == '__main__':
     ARGS = _parse_args()
+    print('[#]', ARGS)
     if CONF['CHECK_UPDATES']:  # Check that dependencies are installed and updated
         check_updates()
     if ARGS.version:

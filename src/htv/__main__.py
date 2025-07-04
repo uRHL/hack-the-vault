@@ -9,8 +9,8 @@ ROOT_PKG = Path(__file__).parents[1] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
 from htv.constants import VERSION, PROG_NAME, PROG_DESCRIPTION
-from htv.utils import CONF, FsTools, check_updates
-from htv.resources import HtvVault, DataSources
+from htv.utils import CONF, FsTools
+from htv.resources import HtvVault
 from importlib import import_module
 
 import argparse
@@ -22,7 +22,7 @@ def init_mode(args) -> int:
 
     :return: 0 if vault initialized successfully. 1 otherwise
     """
-    return HtvVault(args.root_dir).makedirs(reset=args.reset)
+    return HtvVault(args.root_dir, args.git_name, args.git_email).makedirs(reset=args.reset)
 
 
 def add_mode(args) -> int:
@@ -30,10 +30,19 @@ def add_mode(args) -> int:
 
     :return: 0 on success. 1 on error
     """
-    if args.json_data is None:
-        return HtvVault().add_resources(args.t)
-    else:  # Add resource from json data
-        return HtvVault().add_resources(DataSources.load(args.json_data))
+    # args.category, args.type, args.data
+    # TODO: create new category if it does not exists
+    # _cat_path = CONF['VAULT_DIR'] / FsTools.secure_dirname(args.category)
+    # HtvVault().add_categories(args.category)
+    return HtvVault().add_resource(
+        args.data[0] if len(args.data) > 0 else None,
+        category=args.category,
+        layout=args.layout,
+    )
+    # else: #args.json_data is None
+    #     return HtvVault().add_resources(args.type)
+    # else:  # Add resource from json data
+    #     return HtvVault().add_resources(DataSources.load(args.json_data))
 
 
 def rm_mode(args) -> int:
@@ -42,39 +51,49 @@ def rm_mode(args) -> int:
     :return: 0 on success. 1 otherwise
     """
     def confirm_prompt():
-        while True:
-            value = input('> Confirm deletion? [y/N] ').lower()
-            if value in ['n', 'no', '']:
-                print(f"[-] Deletion cancelled")
-                return False
-            elif value in ['y', 'yes']:
-                print(f"[+] Deleting resources: {args.targets}")
-                return True
-            else:
-                print(f"> Please answer y/n")
-    if args.y and not confirm_prompt(): # Ir confirm requested but not accepted, cancel operation
-        return 0
+        try:
+            while True:
+                value = input('>>> Confirm deletion? [y/N] ').lower()
+                if value in ['n', 'no', '']:
+                    print(f"[-] Deletion cancelled")
+                    return False
+                elif value in ['y', 'yes']:
+                    print(f"[+] Deleting resources: {args.targets}")
+                    return True
+                else:
+                    print(f"> Please answer y/n")
+        except (EOFError, KeyboardInterrupt, OSError):
+            return False
+
+    if not CONF['VAULT_DIR'].exists():
+        print(f"[!] Vault not initialized. Run `htv init` to start")
+        return 1
 
     if 'VAULT' in args.targets:
         print(f"[*] CAUTION: Deleting the entire vault")
-        if confirm_prompt():
+        if not args.y and not confirm_prompt():  # Ir confirm requested but not accepted, cancel operation
+            return 0
+        else:
             return HtvVault().removedirs()
-            # shutil.rmtree(CONF['VAULT_DIR'])
-        return 0
-    return HtvVault().remove_resources(*args.targets)
+    else:
+        if not args.y and not confirm_prompt():  # Ir confirm requested but not accepted, cancel operation
+            return 0
+        else:
+            return HtvVault().remove_resources(*args.targets)
+
 
 
 def list_mode(args) -> int:
     """List resource(s) from the vault
 
-    :return: 0 on success. 1 otherwise
+    :return: Number of listed elements [0, 256]
     """
     # TODO: if categories is None, list parent categories only
-    HtvVault().list_resources(
+    _ = HtvVault().list_resources(
         *args.categories,
         regex=args.name if hasattr(args, 'name') else None
     )
-    return 0
+    return 0 if _ is None else len(_)
 
 
 def use_mode(args) -> int:
@@ -107,9 +126,9 @@ def version_mode(args) -> int:
     print(f"v{VERSION}")
     return 0
 
-################################################################################3
+################################################################################
 
-def _parse_args():
+def _parse_args(cmd = None):
     """Command-line interface configuration"""
     parser = argparse.ArgumentParser(prog=PROG_NAME, description=PROG_DESCRIPTION)
     parser.add_argument(
@@ -127,7 +146,7 @@ def _parse_args():
         description='Initialize a new vault. To reset an existing vault use option -R'
     )
     vault_cli.add_argument(
-        '--root-dir',
+        '-r', '--root-dir',
         help='Path were the vault will be created, defaults to $HOME/Documents/01-me/vaults'
     )
     vault_cli.add_argument(
@@ -136,21 +155,43 @@ def _parse_args():
         action='store_true',
         default=False
     )
+    vault_cli.add_argument(
+        '--git-name',
+        type=str,
+        help='Name to be used in the commits'
+    )
+    vault_cli.add_argument(
+        '--git-email',
+        type=str,
+        help='Email to be used in the commits'
+    )
     # ADD CLI
     add_cli =subparser.add_parser(
         name='add',
         help='Add new htb resources to your vault',
-        description = 'Add new HTB resources to your vault'
+        description = 'Add new resources to your vault'
     )
-    add_cli_group = add_cli.add_mutually_exclusive_group()
-    add_cli_group.add_argument(
-        '-t',
+    # add_cli_group = add_cli.add_mutually_exclusive_group()
+    add_cli.add_argument(
+        '-c', '--category',
         # choices=list(RES_TYPES),
-        help="Type of resources to be added. If not specified it will be deduced from json data",
+        metavar='CAT',
+        default=CONF['DEFAULT_CAT'],
+        help="Category of the resource to be added. If will be created if does not exists",
     )
-    add_cli_group.add_argument(
-        '--json-data',
-        help='Resource details. This JSON is returned by toolkit.js when executed in a HTB resource page'
+    add_cli.add_argument(
+        '-l', '--layout',
+        metavar='LAYOUT',
+        choices=['module', 'path', 'exercise', 'file', 'custom'],
+        default='custom',
+        help="Resource layout. Defaults to 'blank', but it is deduced from json data if possible"
+    )
+    add_cli.add_argument(
+        'data',
+        nargs='*',
+        type=str,
+        metavar='NAME_DATA',
+        help='Name, or details in JSON format, of the resource to be added. This JSON is returned by the corresponding datasource toolkit.js when executed in the correspondent page.'
     )
     # Remove CLI
     remove_cli = subparser.add_parser(
@@ -175,8 +216,8 @@ def _parse_args():
     list_cli = subparser.add_parser(
         name='list',
         description='Shows Vault resources (modules, exercises, ...). '
-             f"Resource categories defined in htv/datasources/sources.yml",
-        help='Shows local HTB resources (modules, machines, VPNs)'
+             f"Resource categories defined in src/datasources/sources.yml",
+        help='Shows local resources (modules, machines, exercises, custom, ...)'
     )
     list_cli.add_argument(
         '-n', '--name',
@@ -223,23 +264,21 @@ def _parse_args():
             except (ImportError, ModuleNotFoundError) as e:
                 print("[DEBUG]", e)
                 continue
-    return parser.parse_args()
+    return parser.parse_args(cmd)
 
-
-if __name__ == '__main__':
-    ARGS = _parse_args()
-    if CONF['CHECK_UPDATES']:  # Check that dependencies are installed and updated
-        check_updates()
+def main(args = None):
+    ARGS = _parse_args(args)
+    print('[#]', ARGS)
     if ARGS.version:
         ARGS.mode = 'version'
     try:
-        globals()[f"{ARGS.mode}_mode"](ARGS)
-        exit(0)
-        # exit(eval(f"{ARGS.mode}_mode({ARGS})"))
-    except KeyError:
+        return globals()[f"{ARGS.mode}_mode"](ARGS)
+    except KeyError:  # Using a custom mode defined in a datasource
         if hasattr(ARGS, f"{ARGS.mode}_mode"):
-            getattr(ARGS, f"{ARGS.mode}_mode")(ARGS)
-            exit(0)
+            return getattr(ARGS, f"{ARGS.mode}_mode")(ARGS)
         else:
             print(f"[!] Mode not specified. Use '-h' option to show modes")
-            exit(1)
+            return 1
+
+if __name__ == '__main__':
+    exit(main())

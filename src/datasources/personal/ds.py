@@ -21,27 +21,30 @@ __default_metadata__ = dict()
 
 class Module(HtvModule):
 
-    __type__ = f"{__root_category__}.mod"
-    __resource_dir__ = f"{__root_category__}/module"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.mod",
+            categories=f"{__root_category__}/module",
+            **__default_metadata__
+        )
 
 class Path(HtvPath):
 
-    __type__ = f"{__root_category__}.path"
-    __resource_dir__ = f"{__root_category__}/path"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.path",
+            categories=f"{__root_category__}/path",
+            **__default_metadata__
+        )
 
 class Exercise(HtvExercise):
 
-    __type__ = f"{__root_category__}.exr"
-    __resource_dir__ = f"{__root_category__}/exercise"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.exr",
+            categories=f"{__root_category__}/exercise",
+            **__default_metadata__
+        )
 
 # Template
 class Vault(HtvVault):
@@ -49,6 +52,7 @@ class Vault(HtvVault):
         Module,
         Path,
         Exercise
+        # TODO: add support to custom resources
     ]
 
     def __init__(self):

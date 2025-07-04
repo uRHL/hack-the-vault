@@ -282,13 +282,9 @@ function getStartingPoint(){
 
 function getMachine(){
     const _headerElem = document.querySelector('#machineProfileHeader');
-    let _headerText = _headerElem.innerText.replace(' · ', '\n').split('\n')
+    //let _headerText = _headerElem.innerText.replace(' · ', '\n').split('\n')
+    let _headerText = _headerElem.children[2].innerText.replace(' · ', '\n').split('\n').filter(e => e != '')
     const res = new HtbExercise('mch')
-
-    if (_headerText[0].includes('Retired')){
-        res.metadata.tags.push(_headerText.splice(0, 1)[0])
-    }  // Pop this tag, is not useful
-    if (_headerText[0].includes('is offline')){_headerText.splice(0, 1)}  // Pop this tag, is not useful
 
     res.metadata.url = document.URL.replace('/information', '');
     res.metadata.authors.push(linkToText(document.querySelector('a[href^="/users/"]')));

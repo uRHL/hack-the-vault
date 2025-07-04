@@ -4,6 +4,11 @@ from pathlib import Path
 __all__ = [
     'ROOT_DIR',
     'VERSION',
+    'DEFAULT_CONF',
+    'RUNTIME_CONF',
+    'CONF_PATH',
+    'PROG_NAME',
+    'PROG_DESCRIPTION'
 ]
 
 #####   C O N S T A N T S   #####
@@ -34,7 +39,7 @@ DOCS = {
 }
 
 """App version"""
-VERSION = '1.0'
+VERSION = '2.0'
 
 """Required system pkg dependencies"""
 DEPENDENCIES = ['python3', 'python3-venv', 'openvpn', 'git']  # Required system pkg dependencies
@@ -44,7 +49,8 @@ CONF_PATH = ROOT_DIR / 'conf.yml'
 """Default configuration. These keys will always be included"""
 DEFAULT_CONF = dict(
         VAULT_DIR="$HOME/Documents/01-me/vaults/hacks-vault",
-        CHECK_UPDATES=False,
+        EXTENSIONS=dict(),
+        DEFAULT_CAT='personal'
     )
 
 """Default configuration. These keys will only be included during runtime, but not saved to disk"""

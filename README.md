@@ -3,7 +3,7 @@
 ![Static Badge](https://img.shields.io/badge/HTV-black)
 ![Static Badge](https://img.shields.io/badge/pwn_records-black)
 
-![Static Badge](https://img.shields.io/badge/test_coverage-84%25-blue)
+![Static Badge](https://img.shields.io/badge/test_coverage-83%25-blue)
 
 
 
@@ -140,31 +140,86 @@ git push -u origin main  # Set upstream for git pull/status
 Your GitHub repositories should look like this:
 ```
 username
-  hacks-vault (blog)
+  hacks-vault
   hacks-vault-private
     @hacks-vault (submodule)
 ```
 
 1. Install htv
-2. Create a new empty repo in remote. It will be your private vault. Name it hacks-vault-private
-3. Init local repo with htv
-4. Pair remote and local
+2. Login into your [GitHub account](https://github.com/login)
+3. Create a new empty private repository. It will be your private vault. Name it `hacks-vault-private`
+4. Init local repo with htv: `htv init`
+5. Pair remote and local: 
 
-If you want to use the web blog version (either for you or to share it)
-1. Select a jekyll theme. There are plenty, choose your favorite. I have created my own ((hacks-vault-theme)[https://github.com/uRHL/hacks-vault-theme])
-   1. Option 1 (recommended): Setup for GitGub pages: Fork the repository. Name it hacks-vault
-   2. Option 2: Setup for local usage (private). You may use it for gh-pages later
-     Create an empty private repo in your account
-     Clone the theme you want to use. Works better with Chirpy-based themes.
-     git clone https://github.com/owner/public-repo.git
-     cd public-repo
-     Change remote (breaks fork linkage, wont be able to get theme updates)
-     git remote set-url origin https://github.com/your-username/private-repo.git
-     git push -u origin main
-   3. Follow the installation instructions of the theme your theme.
-   4. Configure the site name, author, ..., tabs, url, ...
-   5. Configure GitHub Actions to automatically build your site when pushing changes
-2. Add submodule to your private repo. The submodule is the public version of hacks-vault
+```bash
+cd $VAULT_DIR
+git remote add origin git@github.com:user/hacks-vault-private.git
+git branch -M main
+git push -u origin main
+```
+
+If you want to use the web blog version (either for you or to share it), first of all, select a Jekyll theme. There are plenty, choose your favorite. I have created my own ([hacks-vault-theme](https://github.com/uRHL/hacks-vault-theme)).
+
+> Works better with themes that support classification by tags and categories, like [Chirpy theme](https://github.com/cotes2020/jekyll-theme-chirpy).
+
+Once you have found your theme, go to its repository. There are 2 ways of "downloading" the theme, depending on your needs on the repository visibility (public or private).
+
+#### Option A: Fork the theme (public site)
+
+This is the recommended option if you are going to deploy your site using GitHub Pages. Free accounts cannot create pages from private repositories thus you will need a public repository to host the content of your site. Additionally, by **forking** the repository you will be able to get theme updates from the original repository.
+
+1. Login into your [GitHub account](https://github.com/login)
+2. Fork the theme repository. Give it a cool name. It will appear in your site URL.
+3. Clone the forked repository locally: `git clone https://github.com/user/forked.git`
+
+#### Option B: Clone the theme (private site or self-hosted)
+
+If you want to keep your site private, or if you want to host it yourself instead of using GitHub Pages, then use this option. By **cloning** the theme, the fork linkage is broken so you will not receive theme updates. If you change your mind and decide to deploy the site with GitHub Pages, just change the repository visibility to `public` and configure GitHub Actions.
+
+1. Login into your [GitHub account](https://github.com/login)
+2. Create an empty private repository
+3. Clone the theme you want to use
+4. Change the remote URL to point to your private repository
+5. Push the changes in the repository configuration
+6. Remove the local repository
+
+```bash
+git clone https://github.com/user/public-repo.git .blog && cd .blog # step 3
+git remote set-url origin https://github.com/your-username/private-repo.git  # Step 4
+git push -u origin main  # Step 5
+cd .. && rm -fr public-repo  # Step 6
+
+```
+Finally, to pair your private and public vaults, add the public one as a submodule of the private vault. The submodule is the public version of hacks-vault.
+
+```bash
+# Add the submodule
+cd $VAULT_DIR
+git submodule add https://github.com/uRHL/hacks-vault.git .blog
+git add . && git commit -am "feat: add jekyll site submodule"
+git push
+```
+
+Now that you have "downloaded" a copy of the theme, you can start with the customization and configuration.
+1. Complete the installation steps indicated in the theme repository. 
+2. Configura the site name, author, ..., tabs, url, ...
+3. Configure GitHub Actions to automatically build and deploy your site whenever changes are pushed to the remote repository.
+
+To push changes in the blog:
+
+```bash
+# Update the submodule repository
+cd $VAULT_DIR/.blog
+git add . && git commit -am "Commit message"
+git push
+# Now update the submodule reference in the main repository
+cd ..
+git add . && git commit -am "fix: update submodule ref"
+git push
+```
+
+### Configuring GitHub Actions
+
 
 ## Creating add-ons
 
@@ -262,9 +317,16 @@ ra-moon
 - [ ] Complete pyproject.toml
 - [ ] DOCS (sphinx and README)
   - [ ] Add section 'Setup GitHub pages'
-- [ ] Templater.front_matter() => metadata + custom args
+- [ ] Templater.front_matter() => metadata + custom args. Categories are `[categories[0], categories[-1]]`
 - [ ] Simulate vault creation and population with my vaults
-- [ ] Add sub-module
+- [ ] Add submodule (test if by cloning the main repo the secondary is cloned)
+- [X] `htv add CAT`. Category is `HTB` returns the corresponding toolkit.js. If no toolkit, create empty resource in the path.
+- [X] Fix basic resources so that default-empty resources can be created (e.g. new exercise)
+- [ ] Update category/README.md#index whenever resources are added/deleted
+- [X] When creating a custom resource are created in __resource_dir__ instead of custom categories
+- [~] Fix `list` CLI. Custom resources are not listed since they are not loaded as resources
+list htb
+
 
 ```
 HtvResource

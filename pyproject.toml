@@ -1,3 +1,36 @@
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[project]
+requires-python = ">= 3.11"
+version = "2.0"
+name = "hack-the-vault"
+description = "HTV is a CLI tool to manage your vaults in addition to a bootstraper to create your own web site"
+authors = [
+    {name = "uRHL", email = "100383351@alumnos.uc3m.es"}
+]
+dependencies = [
+    # System pkg dependencies: python3 python3-venv openvpn git
+    "PyYAML==6.0.2",
+    "Jinja2==3.1.6",
+    "MarkupSafe==3.0.2",
+    "pyperclip==1.9.0",
+    "tqdm==4.67.1"
+]
+readme = "README.md"
+license = "AGPL-3.0 license"
+license-files = ["LICENSE*"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: All",
+    "Topic :: Note Keeping :: CLI Tools :: Blogging",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = ["hack-the-vault", "blog", "github-pages"]
+
+[project.urls]
+Homepage = "https://github.com/uRHL/hack-the-vault"
+Documentation = "https://urhl.github.io/hack-the-vault/"
+Repository = "https://github.com/uRHL/hack-the-vault.git"
+Issues = "https://github.com/uRHL/hack-the-vault/issues"

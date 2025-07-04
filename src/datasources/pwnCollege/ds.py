@@ -20,19 +20,22 @@ __default_metadata__ = dict()
 
 class Module(HtvModule):
 
-    __type__ = f"{__root_category__}.mod"
-    __resource_dir__ = f"{__root_category__}/module"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.mod",
+            categories=f"{__root_category__}/module",
+            **__default_metadata__
+        )
 
 class Dojo(HtvPath):
 
-    __type__ = f"{__root_category__}.dojo"
-    __resource_dir__ = f"{__root_category__}/dojo"
 
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.dojo",
+            categories=f"{__root_category__}/dojo",
+            **__default_metadata__
+        )
 
 
 # Template
@@ -46,7 +49,8 @@ class Vault(HtvVault):
         super().__init__(__root_category__)
 
     def __dir_struct__(self, *args) -> list:
-        return super().__dir_struct__(
-            # Custom files here
-            *args
-        )
+        # return super().__dir_struct__(
+        #     # Custom files here
+        #     *args
+        # )
+        return []

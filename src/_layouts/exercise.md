@@ -11,10 +11,11 @@
 > To attack the target machine, you must be on the same network.
 > Connect to the Starting Point VPN using one of the following options: Pwnbox or OpenVPN
 {% endif %}
+{% if resource.metadata.hasattr('targets') %}
 ```bash
 export TARGET="{{ resource.metadata.targets[0] }}"
 ```
-
+{% endif %}
 
 {% for task in resource.tasks %}
 {% include 'task.md' %}

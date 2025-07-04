@@ -40,20 +40,28 @@ class TestVault:
     # vault.add('htb')
 
 
-    def test_init(self, vault):
+    def test_init(self, vault, monkeypatch):
         """Fresh init"""
+        responses = iter(["me", "me@me.com"])
+        monkeypatch.setattr('builtins.input', lambda _: next(responses))
         assert vault.makedirs() == 0
 
     def test_init_twice(self, vault):
         """Vault already exists"""
         assert vault.makedirs() == 1
 
-    def test_reset(self, vault):
+    def test_reset(self, vault, monkeypatch):
         """Reset an existing vault"""
-        assert vault.makedirs(reset=True) == 0
+        responses = iter(["me", "me@me.com"])
+        monkeypatch.setattr('builtins.input', lambda _: next(responses))
+
+        vault.makedirs(reset=True)
+        assert vault.path.exists()
 
     @pytest.mark.parametrize('path', sorted((Path(__file__).parent / 'fixtures').glob('[0-9]*')))
-    def test_add_resource(self, path, vault):
+    def test_add_resource(self, path, vault, monkeypatch):
+        monkeypatch.setattr('builtins.input', lambda _: "skip")
+
         with open(path, 'r') as file:
             res = htv.DataSources.load(file.read())  # Deserialize resource
         vault.add_resources(res) # Add resources to the vault
@@ -70,30 +78,30 @@ class TestVault:
         assert len(vault.list_resources('none')) == 0
 
     def test_list_filtering_no_results(self, vault):
-        assert len(vault.list_resources('htb.mod', regex='random')) == 0
+        assert len(vault.list_resources('htb/academy/module', regex='random')) == 0
 
     def test_list_filtering_one_results(self, vault):
-        assert len(vault.list_resources('htb.mod', regex='javascript-deobfuscation')) == 1
+        assert len(vault.list_resources('htb/academy/module', regex='javascript-deobfuscation')) == 1
 
     def test_list_filtering_many_results(self, vault):
         assert len(vault.list_resources('all', regex='e')) == 2
 
     def test_list_by_category(self, vault):
         # Run this test after all other list_resources() test. Cache needs to be set up for next test
-        assert len(vault.list_resources('htb.mod')) == 3
+        assert len(vault.list_resources('htb/academy/module')) == 3
 
     @pytest.mark.parametrize(
         'selector,expected', [
-            (1, 'web-requests'),
-            (3, 'getting-started'),
+            (1, 'getting-started'),
+            (3, 'web-requests'),
             ('solar', 'solar')
         ])
     def test_use_one_resource(self, selector, expected, vault):
         assert vault.use_resource(selector).name == expected
-#
-#     # def test_use_many_resources(self):
-#     #     assert len(self.vault.use_resource(*range(1, len(self.vault.list_resources('all')) + 1))) == 11
-#     #
+
+    # def test_use_many_resources(self, vault):
+    #     assert len(vault.use_resource(*range(1, len(vault.list_resources('all')) + 1))) == 11
+
     def test_clean(self, vault):
         # create dummy files and folders in vault
         dummies = [
@@ -109,7 +117,7 @@ class TestVault:
             os.makedirs(vault.path / d)
         vault.clean()
         assert True not in [(vault.path / d).exists() for d in dummies]  # assert dummy files do not exist
-#
+
     def test_rm_res_by_name(self, vault):
         assert vault.remove_resources('web-requests') == 1
 
@@ -124,7 +132,6 @@ class TestVault:
         assert vault.remove_resources('random-res') == 0
 
     def test_removedirs(self, vault):
-        input("Press enter to finish")
-        vault.removedirs()
+        vault.removedirs(reset=True)
         assert not Path(os.path.expandvars(TEST_VAULT_DIR)).exists()
 

@@ -5,7 +5,7 @@ import sys
 ROOT_PKG = Path(__file__).parents[3] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
-from htv.resources import HtvModule, HtvPath, HtvExercise, HtvVault, CustomResource, DataSources
+from htv.resources import HtvModule, HtvPath, HtvExercise, HtvVault, FileResource, DataSources
 from htv.utils import CONF, FsTools, add_extensions
 from htv.__main__ import use_mode, list_mode
 
@@ -15,17 +15,19 @@ import re
 # TEMPLATE
 __root_category__ = 'htb'
 # TEMPLATE: __all__ = []
-__all__ = ['Vault', 'VpnClient', 'add_subparser',
+__all__ = ['Vault', 'Vpn', 'add_subparser',
            'AcademyModule', 'AcademySkillPath', 'AcademyJobRolePath',
            'LabStartingPoint', 'LabMachine', 'LabChallenge', 'LabSherlock',
            'LabTrack', 'LabProLab', 'LabFortress', 'LabBattleground', ]
 
-__default_metadata__ = dict(os=None,
-            points=None,
-            rating=None,
-            targets=list(),
-            release_date=None,
-            related_academy_modules=None)
+__default_metadata__ = dict(
+    os=None,
+    points=None,
+    rating=None,
+    targets=list(),
+    release_date=None,
+    related_academy_modules=None
+)
 
 __extensions__ = {
     '.ovpn': 'htb.vpn'
@@ -35,30 +37,32 @@ add_extensions(**__extensions__)
 
 #######  B A S E   C L A S S E S  ####################
 
-class VpnClient(CustomResource):
+class Vpn(FileResource):
     """
     Dataclass representing a configuration for OpenVpn.
 
-    :cvar __resource_dir__: [Path] Location for these resources within the vault (relative path)
     :ivar protocol: [str] Protocol configured in the vpn file (tcp or udp)
     :ivar port: [int] Port configured in vpn file. Normally 443 for tcp and 1337 for udp
     :ivar remote: [str] Full string of the remote server configured in the vpn file.
 
     """
-    __type__ = f"{__root_category__}.vpn"
-    __resource_dir__ = f"{__root_category__}/vpn"
-    __file_ext__ = '.ovpn'
 
     # Custom class attribute
     __log_path__ = Path('/tmp/.htbtlk.log')  # CONF['_LOG_PATH']  # Path to log file (Value read from `CONF`)
 
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            title='',
+            extension='.ovpn',
+            categories=f"{__root_category__}/vpn"
+            # _type=f"{__root_category__}.vpn",
+        )
         self._proc = None  # Process running the open-vpn client
         self._path = None
         self.protocol = None  # (tcp, udp)
         self.port = None  # (tcp -> 443, udp -> 1337)
         self.remote = None
+
 
     @property
     def country(self) -> str:
@@ -96,17 +100,11 @@ class VpnClient(CustomResource):
         :raise ValueError: If path, or file content, is not valid
         TODO: template
         """
+        print("MIERDA", kwargs.get('path', None))
         if 'path' not in kwargs:
             print("[!] Missing path to file with the data to be updated")
             return
-        path = Path(kwargs.pop('path'))
-        if path.name.endswith(".ovpn") and path.exists():  # Init from file
-            setattr(self, '_name', path.name)
-            # self._name = path.name
-            # self._path = path if path.is_absolute() else self._path = CONF['VAULT_DIR'] / f"vpn/{path}"
-        else:  # path provided but invalid file
-            raise ValueError("Not a VPN configuration file")
-        # Config file provided. Parse it
+        self.name = Path(kwargs.pop('path')).name
         with open(self.path, 'r') as conf_file:
             lines = conf_file.readlines()
         try:  # Parse info
@@ -116,7 +114,7 @@ class VpnClient(CustomResource):
             if self.protocol not in ['tcp', 'udp']:
                 raise ValueError(f"Unknown protocol '{self.protocol}'. Expected: tcp, udp ({self.path}:2)")
         except (IndexError, ValueError): # Valid file name but invalid content
-            raise ValueError(f"VPN file syntax not recognized '{path}'")
+            raise ValueError(f"VPN file syntax not recognized '{self.path}'")
 
     def open(self) -> None:
         """Updates the app runtime configuration with this VPN details"""
@@ -192,9 +190,6 @@ class AcademyModule(HtvModule):
 
     """
 
-    __type__ = f"{__root_category__}.mod"
-    __resource_dir__ = f"{__root_category__}/academy/module"
-
     TIER_COST = {
         '0': 10,
         'I': 50,
@@ -205,7 +200,11 @@ class AcademyModule(HtvModule):
     COST_TIER = {v: k for k, v in TIER_COST.items()}
 
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.mod",
+            categories=f"{__root_category__}/academy/module",
+            **__default_metadata__
+        )
         self._tier = None
         self.duration = None
         self.summary = None
@@ -239,11 +238,13 @@ class AcademySkillPath(HtvPath):
     :ivar duration: [str] Approximated time to complete the path (days)
 
     """
-    __type__ = f"{__root_category__}.spt"
-    __resource_dir__ = f"{__root_category__}/academy/skill-path"
 
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.spt",
+            categories=f"{__root_category__}/academy/skill-path",
+            **__default_metadata__
+        )
         self.cost = None
         self.duration = None
 
@@ -260,11 +261,12 @@ class AcademyJobRolePath(HtvPath):
 
     """
 
-    __type__ = f"{__root_category__}.jpt"
-    __resource_dir__ = f"{__root_category__}/academy/job-role-path"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.jpt",
+            categories=f"{__root_category__}/academy/job-role-path",
+            **__default_metadata__
+        )
         self.cost = None
         self.duration = None
 
@@ -277,11 +279,12 @@ class AcademyJobRolePath(HtvPath):
 
 class LabStartingPoint(HtvExercise):
 
-    __type__ = f"{__root_category__}.stp"
-    __resource_dir__ = f"{__root_category__}/lab/starting-point"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.stp",
+            categories=f"{__root_category__}/lab/starting-point",
+            **__default_metadata__
+        )
 
 
     def __dir_struct__(self, *args) -> list:
@@ -293,31 +296,35 @@ class LabStartingPoint(HtvExercise):
 
 class LabMachine(HtvExercise):
 
-    __type__ = f"{__root_category__}.mch"
-    __resource_dir__ = f"{__root_category__}/lab/machine"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.mch",
+            categories=f"{__root_category__}/lab/machine",
+            **__default_metadata__
+        )
 
 class LabChallenge(HtvExercise):
     """Class representing a Challenge in the HTB lab
 
     :cvar info.logo: [str] 'https://app.hackthebox.com/images/logos/htb_ic2.svg'
     """
-    __type__ = f"{__root_category__}.chl"
-    __resource_dir__ = f"{__root_category__}/lab/challenge"
 
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.chl",
+            categories=f"{__root_category__}/lab/challenge",
+            **__default_metadata__
+        )
         self.metadata.logo = 'https://app.hackthebox.com/images/logos/htb_ic2.svg'
 
 class LabSherlock(HtvExercise):
 
-    __type__ = f"{__root_category__}.shr"
-    __resource_dir__ = f"{__root_category__}/lab/sherlock"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.shr",
+            categories=f"{__root_category__}/lab/sherlock",
+            **__default_metadata__
+        )
 
 class LabTrack(HtvPath):
     """Class representing a Track in the HTB lab
@@ -325,19 +332,21 @@ class LabTrack(HtvPath):
     :ivar _sections: [list[:class:`HtvExercise`]] List of machines (lab machines and challenges) associated to the track
     """
 
-    __type__ = f"{__root_category__}.trk"
-    __resource_dir__ = f"{__root_category__}/lab/track"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.trk",
+            categories=f"{__root_category__}/lab/track",
+            **__default_metadata__
+        )
 
 class LabProLab(HtvExercise):
 
-    __type__ = f"{__root_category__}.lab"
-    __resource_dir__ = f"{__root_category__}/lab/pro-lab"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.lab",
+            categories=f"{__root_category__}/lab/pro-lab",
+            **__default_metadata__
+        )
         self.entry_point = None
         self._targets = list()
 
@@ -374,11 +383,12 @@ class LabProLab(HtvExercise):
 
 class LabFortress(HtvExercise):
 
-    __type__ = f"{__root_category__}.ftr"
-    __resource_dir__ = f"{__root_category__}/lab/fortress"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.ftr",
+            categories=f"{__root_category__}/lab/fortress",
+            **__default_metadata__
+        )
 
 class LabBattleground(HtvExercise):
     """Class representing a Battleground in the HTB lab
@@ -386,11 +396,12 @@ class LabBattleground(HtvExercise):
     :raise NotImplementedError
     """
 
-    __type__ = f"{__root_category__}.btg"
-    __resource_dir__ = f"{__root_category__}/lab/battleground"
-
     def __init__(self):
-        super().__init__(**__default_metadata__)
+        super().__init__(
+            _type=f"{__root_category__}.btg",
+            categories=f"{__root_category__}/lab/battleground",
+            **__default_metadata__
+        )
         # TODO: parser not implemented
 
 #######  D S   V A U L T  ####################
@@ -400,7 +411,7 @@ class Vault(HtvVault):
     __resources__ = [
         AcademyModule, AcademySkillPath, AcademyJobRolePath,
         LabStartingPoint, LabMachine, LabChallenge, LabSherlock,
-        LabTrack, LabProLab, LabFortress, LabBattleground, VpnClient
+        LabTrack, LabProLab, LabFortress, LabBattleground, Vpn
     ]
 
     def __init__(self):
@@ -412,6 +423,7 @@ class Vault(HtvVault):
             ('vpn/README.txt', 'Download VPN conf file (.ovpn extension) from HTB page \n'),
             (self.path / 'ctf')
         ]
+
 
 #######  C L I   P A R S E R S  ####################
 
@@ -443,7 +455,7 @@ def handle_args(args) -> int:
     :return: 0 on success. 1 on error
     """
     if args.action == 'list':
-        args.categories = ['vpn']
+        args.categories = ['htb.vpn']
         return list_mode(args)
     elif args.action == 'start':
         if isinstance(args.target, list):

@@ -10,3 +10,7 @@ conf.yml
 docs/build/
 docs/Makefile
 docs/make.bat
+
+# Ignore coverage reports
+tests/coverage-report
+**/.coverage

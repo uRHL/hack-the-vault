@@ -1,3 +1,4 @@
+from json import JSONDecodeError
 from pathlib import Path
 import sys
 
@@ -6,7 +7,7 @@ import yaml
 ROOT_PKG = Path(__file__).parents[1] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
-from htv.constants import CONF_PATH, DEPENDENCIES, RUNTIME_CONF, DEFAULT_CONF
+from htv.constants import CONF_PATH, RUNTIME_CONF, DEFAULT_CONF
 from collections.abc import Iterable
 from datetime import datetime
 from typing import TextIO, Any
@@ -22,10 +23,15 @@ import os
 import re
 
 __all__ = [
-    'CONF',
-    'FsTools',
+    'add_extensions',
+    'Cache',
     'Conf',
-    'Templater'
+    'CONF',
+    'flatten',
+    'FsTools',
+    'Git',
+    'open_browser_tab',
+    'Templater',
 ]
 
 #####   C L A S S E S   #####
@@ -162,18 +168,19 @@ class Conf(dict):
                 self.pop(v.upper())
         self._save()
 
-    def reset(self) -> None:
+    def reset(self, restart: bool = False) -> None:
         """Resets the configuration to defaults parameters
 
         :return: None
         """
         print(f"[*] Resetting default config...")
         self.clear()
-        self.update_values(**self._default)  # Default conf values
-        self.update_values(**self._runtime)  # Add runtime parameters
+        self.update_values(**self._default, **self._runtime)  # Default conf values and runtime parameters
+        # self.update_values(**self._runtime)  # Add runtime parameters
         self._save()
-        print(f"[*] Re-starting the application to apply the changes")
-        exit(0)
+        if restart:
+            print(f"[*] Re-starting the application to apply the changes")
+            exit(0)
 
 
 class FsTools:
@@ -181,7 +188,7 @@ class FsTools:
     Static class to interact with files
     """
     @staticmethod
-    def dump_file(path, content: str | bytes = None, exists_ok: bool = False, **kwargs) -> None:
+    def dump_file(path: str | Path, content: str | bytes = None, exists_ok: bool = False, **kwargs) -> None:
         """Dump content into file
 
         Dump the provided content into a file.
@@ -201,14 +208,16 @@ class FsTools:
             raise FileExistsError(f"File {path} already exists and it's not empty")
         if content is None:
             content = ''
-        if content.startswith('t:'):  # Render template
+        if isinstance(content, str) and content.startswith('t:'):
             content = FsTools.render_template(content.split(':').pop(), path, **kwargs)
         if isinstance(content, bytes):
-            with open(path, 'wb') as file:  # Dump content to file
-                file.write(content)
+            mode = 'wb'
         else:
-            with open(path, 'w') as file:  # Dump content to file
-                file.write(content)
+            mode = 'w'
+            if content.startswith('t:'):  # Render template
+                content = FsTools.render_template(content.split(':').pop(), path, **kwargs)
+        with open(path, mode) as file:  # Dump content to file
+            file.write(content)
 
 
     @staticmethod
@@ -242,13 +251,9 @@ class FsTools:
                 name = Path(root_dir) / name
 
             if content is None: # Name points to directory
-                os.makedirs(name)
+                os.makedirs(name, exist_ok=True)
             else: # Name points to file
-                # try:
                 FsTools.dump_file(name, content=content, exists_ok=exists_ok, **kwargs)
-                # except TypeError:
-                #     print("\n\nDEBUG", name, content, kwargs)
-                #     raise TypeError
 
 
     @staticmethod
@@ -263,15 +268,11 @@ class FsTools:
             pyperclip.copy(str(value))
 
     @staticmethod
-    def copy_js_toolkit(path: str | Path, _stdout: TextIO | tqdm = None):
+    def copy_js_toolkit(path: str | Path, _stdout: TextIO | tqdm = sys.stdout):
         _prompt = '[*] Use the script in the dev-tools console (F12). Then copy the returned value into the terminal.'
         FsTools.set_clipboard(path)
-        if _stdout is None:
-            sys.stdout.write('[+] JavaScript tools copied to the clipboard\n')
-            sys.stdout.write(f"{_prompt}\n")
-        else:
-            _stdout.write('[+] JavaScript tools copied to the clipboard')
-            _stdout.write(f"{_prompt}")
+        _stdout.write('[+] JavaScript tools copied to the clipboard')
+        _stdout.write(f"{_prompt}")
 
 
     @staticmethod
@@ -306,7 +307,10 @@ class FsTools:
 
         :return: Secured filename
         """
-        return re.sub('[ ,&:-]+', '_', str(name)).lower()
+        return re.sub(
+            r"[ ,&:\"'-]+", '_',
+            None if name is None else str(name).strip()
+        ).lower().strip('_')
 
     @staticmethod
     def secure_dirname(name) -> str:
@@ -317,8 +321,10 @@ class FsTools:
 
         :return: Secured dir name
         """
-
-        return re.sub('[ ,&:?-]+', '-', str(name)).lower()
+        return re.sub(
+            r"[ ,&:?\"'-]+", '-',
+            None if name is None else str(name).strip()
+        ).lower().strip('-')
 
 
     @staticmethod
@@ -342,12 +348,28 @@ class FsTools:
             print(f"[-] Index {selector} does not exist. Run command `list` again.")
             return None
         except ValueError:  # Not an index, try string search
+            print("DEBUGA: ", selector)
             _tgs = list(CONF['VAULT_DIR'].glob(f"**/{str(selector).lower()}"))
             if len(_tgs) == 1:
                 return _tgs[0]
             else:
-                print(f"[-] Not a perfect match, {len(_tgs)} results")
+                if len(_tgs) > 0:
+                    print(f"[-] Not a perfect match, {len(_tgs)} results")
+                else:
+                    print(f"[-] Not matches found")
                 return None
+
+    @staticmethod
+    def is_json(data):
+        try:
+            json.loads(data)
+            return True
+        except JSONDecodeError:
+            return False
+
+    @staticmethod
+    def is_yaml(data):
+        return isinstance(yaml.safe_load(data), dict)
 
 
 class Git:
@@ -379,33 +401,35 @@ class Git:
         print(f"[*] Public key: {subprocess.run('cat ~/.ssh/gh.pub', shell=True, capture_output=True, text=True).stdout}")
 
     @staticmethod
-    def config_git_user() -> None:
+    def config_git_user(name: str = None, email: str = None) -> None:
+        """Configure Git user data
+        Set the user's name and email to be used for git commits
+        Prompts to input name and email if not provided in the params
         """
-        Prompts user to input name and email to be used for commits.
-        """
-        print('[*] Git Name and email must be configured to push into the repository')
-        print('[*] Who is in charge of this vault?')
-        name_input = None
-        email_input = None
-        while name_input in [None, '']:
-            name_input = input('>> name: ')
-        while email_input in [None, '']:
-            email_input = input('>> email: ')
-            if re.match(r'.+@\w+\.\w{2,}', email_input) is None:
-                email_input = None
-        print(f"[+] Git user configured {name_input} ({email_input})")
-        subprocess.run(f'git config user.name "{name_input}"', shell=True, check=True, cwd=CONF['VAULT_DIR'])
-        subprocess.run(f'git config user.email "{email_input}"', shell=True, check=True, cwd=CONF['VAULT_DIR'])
+        if None in (name, email):
+            print('[*] Git Name and email must be configured to push into the repository')
+            print('[*] Who is in charge of this vault?')
+            while name in [None, '']:
+                name = input('>> name: ')
+            while email in [None, '']:
+                email = input('>> email: ')
+                if re.match(r'.+@\w+\.\w{2,}', email) is None:
+                    email = None
+        print(f"[+] Git user configured {name} ({email})")
+        subprocess.run(f'git config user.name "{name}"', shell=True, check=True, cwd=CONF['VAULT_DIR'])
+        subprocess.run(f'git config user.email "{email}"', shell=True, check=True, cwd=CONF['VAULT_DIR'])
 
     @staticmethod
-    def commit(msg: str) -> None:
+    def commit(msg: str, quiet: bool = False) -> None:
         """Commit all changes
 
         :param msg: Message associated to the commit
+        :param quiet: If True, the output of the command is captured. If False, it is printed to STDOUT
         """
         freeze_virtual_environments()
         subprocess.run('git add .', shell=True, check=True, cwd=CONF['VAULT_DIR'])
-        subprocess.run(f'git commit -am "{msg}"', shell=True, check=True, cwd=CONF['VAULT_DIR'])
+        subprocess.run(f'git commit -am "{msg}"', shell=True, check=True, cwd=CONF['VAULT_DIR'], capture_output=quiet)
+        print(f"[+] Changes commited to the repository")
 
     @staticmethod
     def push() -> None:
@@ -533,28 +557,6 @@ def open_browser_tab(url, quiet: bool = True, delay: int = 0) -> None:
         webbrowser.open_new_tab(url)
     time.sleep(delay)
 
-def check_updates() -> int:
-    """Check for dependencies updates
-
-    Check for updates of the required dependencies which are listed in constants.DEPENDENCIES
-
-    :return: 0 if dependencies are updated successfully. 1 if update failed. 2 if operation canceled
-    """
-    # TODO: run pip install -U -r requirements.txt
-    print(f"[*] Checking for updates...")
-    try:
-        subprocess.run('sudo apt update', capture_output=True, shell=True, check=True)
-        subprocess.run(f"sudo apt upgrade {' '.join(DEPENDENCIES)}", shell=True, check=True)
-    except KeyboardInterrupt:
-        print("[!] Update cancelled")
-        return 2
-    except subprocess.CalledProcessError:
-        print("[!] Error updating dependencies")
-        return 1
-    else:
-        print(f"[+] Dependencies updated successfully")
-        return 0
-
 def add_extensions(**kwargs) -> None:
     """Load add-on extensions
 
@@ -570,7 +572,10 @@ def freeze_virtual_environments():
     Create requirements.txt from existing virtual environments found in the vault.
     """
     print("[*] Freezing virtual environments...")
-    bar = tqdm(list(filter(lambda x: x.is_dir(), CONF['VAULT_DIR'].glob('**/*venv*'))))
+    _targets = list(filter(lambda x: x.is_dir(), CONF['VAULT_DIR'].glob('**/*venv*')))
+    if len(_targets) <= 0:
+        return
+    bar = tqdm(_targets)
     for p in bar:
         _proc = subprocess.run(
             f"bash -c 'source {p}/bin/activate && pip freeze > {p.parent / 'requirements.txt'}'",
@@ -583,6 +588,8 @@ def freeze_virtual_environments():
             # bar.write(_proc.stderr)
 
 def flatten(lst):
+    if lst is None:
+        return list()
     for item in lst:
         if isinstance(item, list):
             yield from flatten(item)

@@ -3,7 +3,7 @@
 ![Static Badge](https://img.shields.io/badge/HTV-black)
 ![Static Badge](https://img.shields.io/badge/pwn_records-black)
 
-![Static Badge](https://img.shields.io/badge/test_coverage-84%25-blue)
+![Static Badge](https://img.shields.io/badge/test_coverage-83%25-blue)
 
 
 
@@ -324,7 +324,6 @@ ra-moon
 - [ ] Update category/README.md#index whenever resources are added/deleted
 - [X] When creating a custom resource are created in __resource_dir__ instead of custom categories
 - [~] Fix `list` CLI. Custom resources are not listed since they are not loaded as resources
-
 list htb
 
 

@@ -2,8 +2,11 @@
 
 # {{ resource.name[0].upper() +  resource.name[1:]}}
 
+{% if description %}
+{{ description }}
+{% else %}
 Description of what is stored here
-
+{% endif %}
 
 ## Index
 

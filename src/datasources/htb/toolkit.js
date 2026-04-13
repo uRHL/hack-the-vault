@@ -134,7 +134,7 @@ class HtbModule extends _Module {
 	}
 
 	constructor(){
-	    super('mod');
+	    super('AcademyModule');
 		this._tier = null;
 		this.duration = null;
 		this.summary = null;
@@ -144,7 +144,7 @@ class HtbModule extends _Module {
 class HtbPath extends _Path {
     constructor(rtype=null){
         if (rtype == null) {
-            super(document.URL.endsWith('jobrole')?'jpt':'spt'); // skill-path, job-role-path
+            super(document.URL.endsWith('jobrole')?'AcademyJobRolePath':'AcademySkillPath');
         } else {
             super(rtype)
         }
@@ -249,7 +249,7 @@ function getPath(){
 function getStartingPoint(){
     const _activeElem = document.querySelector('div.v-item--active');
 
-    const res = new HtbExercise('stp');
+    const res = new HtbExercise('LabStartingPoint');
 
     res.metadata.url = document.URL;
     res.metadata.authors.push('HTB');
@@ -284,7 +284,7 @@ function getMachine(){
     const _headerElem = document.querySelector('#machineProfileHeader');
     //let _headerText = _headerElem.innerText.replace(' · ', '\n').split('\n')
     let _headerText = _headerElem.children[2].innerText.replace(' · ', '\n').split('\n').filter(e => e != '')
-    const res = new HtbExercise('mch')
+    const res = new HtbExercise('LabMachine')
 
     res.metadata.url = document.URL.replace('/information', '');
     res.metadata.authors.push(linkToText(document.querySelector('a[href^="/users/"]')));
@@ -346,10 +346,6 @@ function getMachine(){
                 }
             }
             res.metadata.release_date = document.querySelector('i.icon-calendar-2').parentElement.innerText.trim();
-            // total_pwns = document.querySelector('div.row.totalPwns').innerText.split('\n');
-            // for(let j = total_pwns.length - 1; j <= 0; j-=2){
-            //      res.info[total_pwns[j]] = Number(total_pwns[j-1]);
-            // }
         }
         printJson(res);
         return res;
@@ -361,7 +357,7 @@ function getMachine(){
 function getChallenge(){
     let _profileElem = document.querySelector('#machineProfile');
     let _detailsText = document.querySelector('div.machine-tags').nextElementSibling.innerText.split('\n')
-    const res = new HtbExercise('chl');
+    const res = new HtbExercise('LabChallenge');
 
     res.metadata.logo = 'https://app.hackthebox.com/images/logos/htb_ic2.svg';
     res.metadata.os = 'docker';
@@ -384,7 +380,7 @@ function getSherlock(){
     let _headerElem = document.querySelector('div.sherlock-profile-header')
     let _headerText = _headerElem.innerText.split('\n');
     let _playInfoElem = document.querySelector('div.v-tabs-items div.borderEbonyClay').children;
-    const res = new HtbExercise('shr');
+    const res = new HtbExercise('LabSherlock');
 
     res.metadata.os = 'any';
     res.metadata.url = document.URL.replace('/play', '');
@@ -411,7 +407,7 @@ function getSherlock(){
     function getSherlockInfo(res){
         // If 'Info' tab disabled cannot parse its data
         if(!document.querySelectorAll('a.v-tab')[1].classList.contains('v-tab--disabled')){
-            res.metmachineadata.release_date = document.querySelector('i.icon-calendar-2').parentElement.innerText.trim();
+            res.metadata.release_date = document.querySelector('i.icon-calendar-2').parentElement.innerText.trim();
             // res.metadata.solves = document.querySelector('i.icon-userflag').parentElement.innerText.trim();
 
             const _infoElem = document.querySelector('div[state^="retired"] > div > div');
@@ -450,7 +446,7 @@ function getSherlock(){
 function getTrack(){
     let _infoElem = document.querySelector('div.cursorPointer.back-arrow + div');
     let _infoText = _infoElem.innerText.split('\n');
-    const res = new HtbPath('trk');
+    const res = new HtbPath('LabTrack');
 
     res.metadata.url = document.URL;
     res.metadata.logo = _infoElem.querySelector('img').src;
@@ -466,18 +462,18 @@ function getTrack(){
     // get track items (machines and/or challenges)
     res.sections = Array.from(document.querySelector('div[xs="12"] > div').children).map(item => {
         if(item.querySelector('i.icon-linux') != null){ // Linux icon, is a machine
-            _ = new HtbExercise('mch')
+            _ = new HtbExercise('LabMachine')
             _.metadata.os = 'linux'
         } else if(item.querySelector('i.icon-windows') != null) { // Windows icon, is a machine
-            _ = new HtbExercise('mch')
+            _ = new HtbExercise('LabMachine')
             _.metadata.os = 'windows'
         } else { // If no OS, is a sherlock
-            _ = new HtbExercise('shr')
+            _ = new HtbExercise('LabSherlock')
         }
         try {
             _.metadata.logo = getBgImageUrl(item.querySelector('div[style^="background-image:"]'));
         } catch(error){ // If no logo, is a challenge
-             _ = new HtbExercise('chl')
+             _ = new HtbExercise('LabChallenge')
         }
         _.metadata.title = item.innerText.split('\n')[0];
         _.metadata.difficulty = normalize(item.innerText.split('\n')[1]);
@@ -489,7 +485,7 @@ function getTrack(){
 
 function getProLab(){
     let _overviewElems = document.querySelector('span.font-size54').parentElement.nextElementSibling.querySelectorAll('span')
-    const res = new HtbExercise('lab');
+    const res = new HtbExercise('LabProLab');
 
     res.metadata.url = document.URL;
     res.metadata.title = document.querySelector('span.font-size54').innerText;
@@ -502,7 +498,7 @@ function getProLab(){
 
         // Get target machines
         res.targets = Array.from(document.querySelectorAll('div.machinecard')).map(item => {
-            let _ = new HtbExercise('mch');
+            let _ = new HtbExercise('LabMachine');
             _.metadata.title = item.innerText;
             _.metadata.logo = getBgImageUrl(item.querySelector('div[style^="background-image:"]'));
             if(item.querySelector('i.icon-windows') != null){
@@ -535,7 +531,7 @@ function getProLab(){
 }
 
 function getFortress() {
-    const res = new HtbExercise('ftr');
+    const res = new HtbExercise('LabFortress');
 
     res.metadata.difficulty = 'real_scenario';
     res.metadata.url = document.URL;
@@ -567,7 +563,7 @@ function getFortress() {
 }
 
 function getBattleground(){
-    const res = new HtbExercise('btg');
+    const res = new HtbExercise('LabBattleground');
     res.metadata.url = document.URL;
     // TODO: implement
     console.warn("NOT IMPLEMENTED: getBattleground()");

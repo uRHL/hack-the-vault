@@ -3,11 +3,11 @@
 ![Static Badge](https://img.shields.io/badge/HTV-black)
 ![Static Badge](https://img.shields.io/badge/pwn_records-black)
 
-![Static Badge](https://img.shields.io/badge/test_coverage-83%25-blue)
+![Static Badge](https://img.shields.io/badge/test_coverage-81%25-blue)
 
 
 
-**Hack the Vault**, abbreviated (**HTV**), is tool to efficiently manage your hacking write-ups and notes. Initially HTV was designed for [Hack The Box (HTB)](https://www.hackthebox.com/), for that reason the vault has that directory structure. Nevertheless, you can use it for any type of write-up or hacking project.
+**Hack the Vault**, abbreviated (**HTV**), is tool to efficiently manage your write-ups and notes.
 
 > [CLI and library documentation](https://urhl.github.io/hack-the-vault/)
 
@@ -40,7 +40,7 @@ Share your discoveries and achievements by setting up a blog in few minutes, dir
 
 ## Installation
 
-> HTV will automatically install the package dependencies with the command `htv -V`. You can also install the dependencies manually: `python3 python3-venv openvpn git`
+> Install the dependencies before continuing: `python3 python3-venv openvpn git`
 
 ```bash
 # 1. Select installation directory
@@ -71,20 +71,12 @@ source ~/.bashrc
 ## Usage
 
 ```bash
-# With aliases created
-htv -h # or hack-the-vault -h
-
-# Without aliases
-source $REPO_DIR/venv/bin/activate
-python3 htv/__main__.py -h
+htv -h
 ```
 
 ## Configuration
 
-Configuration file (`$REPO_DIR/conf.yml`) contain some configuration parameters like the vault directory or the automatic check of dependencies update. You can change this configuration at any time.
-
-To disable the automatic check for updates modify the configuration file (`$REPO_DIR/conf.yml`)
-
+Configuration file (`$REPO_DIR/conf.yml`) contains some configuration parameters like the vault directory. You can change this configuration at any time.
 
 ## Vault structure
 The vault has the following structure
@@ -92,7 +84,9 @@ The vault has the following structure
 ```
 vault
 ├── category-1
+│   ├── README.md
 │   ├──sub-cat-1
+│   │  ├── README.md
 │   │  ├── resource-1
 │   │  │   ├── info.yml
 │   │  │   ├── README.md
@@ -101,8 +95,12 @@ vault
 │   │  ├── resource-2
 │   │  └── ...
 │   ├──sub-cat-2
+│   │  ├── README.md
+│   │  └── ...
 │   └── ...
 ├── category-2
+│   ├── README.md
+│   └── ...
 └── ...
 ```
 
@@ -112,6 +110,11 @@ To run test and generate coverage report run the following command from the inst
 
 ```bash
 pytest --cov --cov-report=html:tests/coverage-report
+```
+
+To run the test without coverage:
+```bash
+pytest -x
 ```
 
 ---
@@ -221,6 +224,17 @@ git push
 ### Configuring GitHub Actions
 
 
+## Import an existing vault
+
+To import an existing vault from GitHub just clone the repository. Remember to include the blog submodule:
+
+```bash
+mkdir -p ~/Documents/01-me/vaults/ && cd ~/Documents/01-me/vaults/
+git clone git@github.com:user/hacks-vault-private.git --recursive hacks-vault
+```
+
+Now you can start using your vault as usually.
+
 ## Creating add-ons
 
 To create a new add-on create a new directory `hack-the-vault/src/datasources/your-add-on` with the following structure:
@@ -324,8 +338,10 @@ ra-moon
 - [X] Fix basic resources so that default-empty resources can be created (e.g. new exercise)
 - [ ] Update category/README.md#index whenever resources are added/deleted
 - [X] When creating a custom resource are created in __resource_dir__ instead of custom categories
-- [~] Fix `list` CLI. Custom resources are not listed since they are not loaded as resources
+- [X] Fix `list` CLI. Custom resources are not listed since they are not loaded as resources
 list htb
+- [ ] Write tutorial: download htv, init vault, add resources, list them
+- [ ] Find a way to update categories' index automatically when resources are added/removed
 
 
 ```

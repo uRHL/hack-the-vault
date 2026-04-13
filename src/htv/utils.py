@@ -1,3 +1,4 @@
+import shutil
 from json import JSONDecodeError
 from pathlib import Path
 import sys
@@ -41,7 +42,7 @@ class Cache:
     Implements a cache using a temp file.
     Cache contains a list of paths, which is overwritten everytime the method :class:`resources.HtbVault.list_resources` is called.
     """
-    __route__ = Path('/tmp/.htbtlk.cc')
+    __route__ = Path('/tmp/.htv.cc')
 
     @staticmethod
     def get(index: int = None) -> Path | list[Path] | None:
@@ -271,8 +272,8 @@ class FsTools:
     def copy_js_toolkit(path: str | Path, _stdout: TextIO | tqdm = sys.stdout):
         _prompt = '[*] Use the script in the dev-tools console (F12). Then copy the returned value into the terminal.'
         FsTools.set_clipboard(path)
-        _stdout.write('[+] JavaScript tools copied to the clipboard')
-        _stdout.write(f"{_prompt}")
+        _stdout.write('[+] JavaScript tools copied to the clipboard\n')
+        _stdout.write(f"{_prompt}\n")
 
 
     @staticmethod
@@ -328,7 +329,7 @@ class FsTools:
 
 
     @staticmethod
-    def search_res_by_name_id(selector: int | str) -> Path | None:
+    def get_resource_by_name_id(selector: int | str) -> Path | None:
         """Search resources by name or index
 
         Search among cached entries and/or the entire vault for a resource.
@@ -348,7 +349,6 @@ class FsTools:
             print(f"[-] Index {selector} does not exist. Run command `list` again.")
             return None
         except ValueError:  # Not an index, try string search
-            print("DEBUGA: ", selector)
             _tgs = list(CONF['VAULT_DIR'].glob(f"**/{str(selector).lower()}"))
             if len(_tgs) == 1:
                 return _tgs[0]
@@ -362,14 +362,21 @@ class FsTools:
     @staticmethod
     def is_json(data):
         try:
+            if isinstance(data, Path):
+                data = open(data, 'r').read()
             json.loads(data)
             return True
-        except JSONDecodeError:
+        except (JSONDecodeError, UnicodeDecodeError):
             return False
 
     @staticmethod
     def is_yaml(data):
-        return isinstance(yaml.safe_load(data), dict)
+        try:
+            if isinstance(data, Path):
+                data = open(data, 'r').read()
+            return isinstance(yaml.safe_load(data), dict) and not FsTools.is_json(data)
+        except (yaml.YAMLError, UnicodeDecodeError):
+            return False
 
 
 class Git:
@@ -390,7 +397,7 @@ class Git:
         _key_name = 'gh'
         email_input = None
         while email_input in [None, '']:
-            email_input = input('>> email: ')
+            email_input = input('>>> email: ')
             if re.match(r'.+@\w+\.\w{2,}', email_input) is None:
                 email_input = None
         print("[*] Generating keys...")
@@ -410,9 +417,9 @@ class Git:
             print('[*] Git Name and email must be configured to push into the repository')
             print('[*] Who is in charge of this vault?')
             while name in [None, '']:
-                name = input('>> name: ')
+                name = input('>>> name: ')
             while email in [None, '']:
-                email = input('>> email: ')
+                email = input('>>> email: ')
                 if re.match(r'.+@\w+\.\w{2,}', email) is None:
                     email = None
         print(f"[+] Git user configured {name} ({email})")
@@ -426,7 +433,7 @@ class Git:
         :param msg: Message associated to the commit
         :param quiet: If True, the output of the command is captured. If False, it is printed to STDOUT
         """
-        freeze_virtual_environments()
+        Git.freeze_virtual_environments()
         subprocess.run('git add .', shell=True, check=True, cwd=CONF['VAULT_DIR'])
         subprocess.run(f'git commit -am "{msg}"', shell=True, check=True, cwd=CONF['VAULT_DIR'], capture_output=quiet)
         print(f"[+] Changes commited to the repository")
@@ -439,6 +446,33 @@ class Git:
             subprocess.run('git push', shell=True, cwd=CONF['VAULT_DIR'])
         else:  # Set upstream for main branch, then push
             subprocess.run('git push -u origin main', shell=True, cwd=CONF['VAULT_DIR'])
+
+    @staticmethod
+    def freeze_virtual_environments(path: str | Path = None):
+        """Create requirements.txt
+
+        Create requirements.txt from existing virtual environments found in the vault.
+        """
+        print("[*] Freezing virtual environments...")
+        if path in [None, '']:
+            path = CONF['VAULT_DIR']
+        else:
+            path = Path(path)
+        _targets = list(filter(lambda x: x.is_dir(), path.glob('**/*venv*')))
+        if len(_targets) <= 0:
+            return
+        bar = tqdm(_targets)
+        for p in bar:
+            _proc = subprocess.run(
+                f"bash -c 'source {p}/bin/activate && pip freeze > {p.parent / 'requirements.txt'}'",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            if _proc.stderr not in [None, '']:
+                bar.write(f"[!] Virtual env is corrupted or missing ({p})")
+                # bar.write(_proc.stderr)
+            shutil.rmtree(p)  # Remove the virtual environment. Can be installed again with
 
 
 class Templater:
@@ -535,6 +569,16 @@ class Templater:
             _cased += w if (ind == 0 and lower_first) else w[0].upper() + w[1:]
         return  _cased
 
+    @staticmethod
+    def pad_num(num: int | float | str, length: int = 0) -> str:
+        """
+        Pads the integer part of a number with 0s to reach the desired length
+        """
+        parts = str(num).split('.')
+        if length > 0 and len(parts[0]) < length:
+            parts[0] = (length - len(parts[0])) * '0' + parts[0]
+        return '.'.join(parts)
+
 
 #####   F U N C T I O N S   #####
 
@@ -565,27 +609,6 @@ def add_extensions(**kwargs) -> None:
     _ext = CONF.get('EXTENSIONS', dict())
     _ext.update(**kwargs)
     CONF.update_values(EXTENSIONS=_ext)
-
-def freeze_virtual_environments():
-    """Create requirements.txt
-
-    Create requirements.txt from existing virtual environments found in the vault.
-    """
-    print("[*] Freezing virtual environments...")
-    _targets = list(filter(lambda x: x.is_dir(), CONF['VAULT_DIR'].glob('**/*venv*')))
-    if len(_targets) <= 0:
-        return
-    bar = tqdm(_targets)
-    for p in bar:
-        _proc = subprocess.run(
-            f"bash -c 'source {p}/bin/activate && pip freeze > {p.parent / 'requirements.txt'}'",
-            shell=True,
-            capture_output=True,
-            text=True
-        )
-        if _proc.stderr not in [None, '']:
-            bar.write(f"[!] Virtual env is corrupted or missing ({p})")
-            # bar.write(_proc.stderr)
 
 def flatten(lst):
     if lst is None:

@@ -22,7 +22,15 @@ def init_mode(args) -> int:
 
     :return: 0 if vault initialized successfully. 1 otherwise
     """
-    return HtvVault(args.root_dir, args.git_name, args.git_email).makedirs(reset=args.reset)
+    _ = HtvVault(git_name=args.git_name, git_email=args.git_email)
+    if args.source is not None:
+        if not _.path.exists():
+            _.makedirs(reset=args.reset)
+        return _.import_vault(args.source)
+        # return HtvVault(args.root_dir, args.git_name, args.git_email).makedirs(reset=args.reset)
+    else:
+        return _.makedirs(reset=args.reset)
+        # return HtvVault(args.root_dir, args.git_name, args.git_email).makedirs(reset=args.reset)
 
 
 def add_mode(args) -> int:
@@ -30,19 +38,11 @@ def add_mode(args) -> int:
 
     :return: 0 on success. 1 on error
     """
-    # args.category, args.type, args.data
-    # TODO: create new category if it does not exists
-    # _cat_path = CONF['VAULT_DIR'] / FsTools.secure_dirname(args.category)
-    # HtvVault().add_categories(args.category)
     return HtvVault().add_resource(
         args.data[0] if len(args.data) > 0 else None,
         category=args.category,
         layout=args.layout,
     )
-    # else: #args.json_data is None
-    #     return HtvVault().add_resources(args.type)
-    # else:  # Add resource from json data
-    #     return HtvVault().add_resources(DataSources.load(args.json_data))
 
 
 def rm_mode(args) -> int:
@@ -58,10 +58,9 @@ def rm_mode(args) -> int:
                     print(f"[-] Deletion cancelled")
                     return False
                 elif value in ['y', 'yes']:
-                    print(f"[+] Deleting resources: {args.targets}")
                     return True
                 else:
-                    print(f"> Please answer y/n")
+                    print(f">>> Please answer y/n")
         except (EOFError, KeyboardInterrupt, OSError):
             return False
 
@@ -76,6 +75,13 @@ def rm_mode(args) -> int:
         else:
             return HtvVault().removedirs()
     else:
+        try:
+            print(f"[*] Selected resources contain a total of {sum([len(list(FsTools.get_resource_by_name_id(_).iterdir())) for _ in args.targets])} files/directories")
+        except FileNotFoundError as e:
+            print(f"[-] Resource not found:", Path(str(e).split("'")[1]).relative_to(CONF['VAULT_DIR']))
+            return 0
+        except AttributeError:  # get_resource_by_name_id returned None
+            return 0
         if not args.y and not confirm_prompt():  # Ir confirm requested but not accepted, cancel operation
             return 0
         else:
@@ -145,10 +151,10 @@ def _parse_args(cmd = None):
         help='Initialize a new vault or resets an existing one',
         description='Initialize a new vault. To reset an existing vault use option -R'
     )
-    vault_cli.add_argument(
-        '-r', '--root-dir',
-        help='Path were the vault will be created, defaults to $HOME/Documents/01-me/vaults'
-    )
+    # vault_cli.add_argument(
+    #     '-r', '--root-dir',
+    #     help='Path were the vault will be created, defaults to $HOME/Documents/01-me/vaults'
+    # )
     vault_cli.add_argument(
         '-R', '--reset',
         help='Resets an existing vault',
@@ -164,6 +170,12 @@ def _parse_args(cmd = None):
         '--git-email',
         type=str,
         help='Email to be used in the commits'
+    )
+    vault_cli.add_argument(
+        '-s', '--source',
+        type=Path,
+        default=None,
+        help='Import the contents of the provided directory into the vault'
     )
     # ADD CLI
     add_cli =subparser.add_parser(
@@ -184,7 +196,7 @@ def _parse_args(cmd = None):
         metavar='LAYOUT',
         choices=['module', 'path', 'exercise', 'file', 'custom'],
         default='custom',
-        help="Resource layout. Defaults to 'blank', but it is deduced from json data if possible"
+        help="Resource layout. Defaults to 'custom', but it is deduced from json data if possible"
     )
     add_cli.add_argument(
         'data',
@@ -205,11 +217,12 @@ def _parse_args(cmd = None):
         action='store_true',
         default=False
     )
+
     remove_cli.add_argument(
         'targets',
         metavar='NAME_ID',
         nargs='+',
-        help='Name(s) or ID(s) of the resource(s) to be removed. To get the ID use the command `htv list`. Use the name `VAULT` to delete the entire vault'
+        help='Name(s) or ID(s) of the resource/category to be removed. To get the ID use the command `htv list`. Use `htv rm VAULT` to delete the entire vault'
     )
 
     # LIST CLI
@@ -262,20 +275,20 @@ def _parse_args(cmd = None):
                 if hasattr(_, 'add_subparser'):
                     _.add_subparser(subparser)
             except (ImportError, ModuleNotFoundError) as e:
-                print("[DEBUG]", e)
+                print("[#]", e)
                 continue
     return parser.parse_args(cmd)
 
-def main(args = None):
-    ARGS = _parse_args(args)
-    print('[#]', ARGS)
-    if ARGS.version:
-        ARGS.mode = 'version'
+def main(cmd = None):
+    args = _parse_args(cmd)
+    print('[#]', args)
+    if args.version:
+        args.mode = 'version'
     try:
-        return globals()[f"{ARGS.mode}_mode"](ARGS)
+        return globals()[f"{args.mode}_mode"](args)
     except KeyError:  # Using a custom mode defined in a datasource
-        if hasattr(ARGS, f"{ARGS.mode}_mode"):
-            return getattr(ARGS, f"{ARGS.mode}_mode")(ARGS)
+        if hasattr(args, f"{args.mode}_mode"):
+            return getattr(args, f"{args.mode}_mode")(args)
         else:
             print(f"[!] Mode not specified. Use '-h' option to show modes")
             return 1

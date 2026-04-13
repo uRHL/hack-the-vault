@@ -2,6 +2,7 @@
 **/.obsidian
 **/.idea
 **/.code
+**/.vscode
 
 # Blog
 .blog/*

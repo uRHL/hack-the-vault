@@ -2,11 +2,13 @@
 from pathlib import Path
 import sys
 
+from htv import Templater
+
 ROOT_PKG = Path(__file__).parents[3] # Points to install-dir/src/
 sys.path.insert(0, str(ROOT_PKG))
 
 from htv.resources import HtvModule, HtvPath, HtvExercise, HtvVault, FileResource, DataSources
-from htv.utils import CONF, FsTools, add_extensions
+from htv.utils import CONF, add_extensions
 from htv.__main__ import use_mode, list_mode
 
 import subprocess
@@ -30,7 +32,7 @@ __default_metadata__ = dict(
 )
 
 __extensions__ = {
-    '.ovpn': 'htb.vpn'
+    '.ovpn': 'htb.Vpn'
 }
 
 add_extensions(**__extensions__)
@@ -48,14 +50,14 @@ class Vpn(FileResource):
     """
 
     # Custom class attribute
-    __log_path__ = Path('/tmp/.htbtlk.log')  # CONF['_LOG_PATH']  # Path to log file (Value read from `CONF`)
+    __log_path__ = Path('/tmp/.htv.log')  # CONF['_LOG_PATH']  # Path to log file (Value read from `CONF`)
 
     def __init__(self):
         super().__init__(
             title='',
             extension='.ovpn',
-            categories=f"{__root_category__}/vpn"
-            # _type=f"{__root_category__}.vpn",
+            category=(f"{__root_category__}/vpn", 'Download VPN conf file (.ovpn extension) from HTB page \n'),
+            _type=f"{__root_category__}.Vpn",
         )
         self._proc = None  # Process running the open-vpn client
         self._path = None
@@ -75,12 +77,10 @@ class Vpn(FileResource):
         # Free, VIP, VIP+
         if self.remote.find('dedivip') != -1:
             return 'VIP+'
-        elif self.remote.find('free') != -1:
-            return 'FREE'
         elif self.remote.find('vip') != -1:
             return 'VIP'
         else:
-            raise ValueError(f"Could not parse cat from remote '{self.remote}'")
+            return 'FREE'
 
     @property
     def server_id(self) -> int:
@@ -100,7 +100,6 @@ class Vpn(FileResource):
         :raise ValueError: If path, or file content, is not valid
         TODO: template
         """
-        print("MIERDA", kwargs.get('path', None))
         if 'path' not in kwargs:
             print("[!] Missing path to file with the data to be updated")
             return
@@ -201,8 +200,8 @@ class AcademyModule(HtvModule):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.mod",
-            categories=f"{__root_category__}/academy/module",
+            _type=f"{__root_category__}.AcademyModule",
+            category=f"{__root_category__}/academy/module",
             **__default_metadata__
         )
         self._tier = None
@@ -241,8 +240,8 @@ class AcademySkillPath(HtvPath):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.spt",
-            categories=f"{__root_category__}/academy/skill-path",
+            _type=f"{__root_category__}.AcademySkillPath",
+            category=f"{__root_category__}/academy/skill-path",
             **__default_metadata__
         )
         self.cost = None
@@ -263,8 +262,8 @@ class AcademyJobRolePath(HtvPath):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.jpt",
-            categories=f"{__root_category__}/academy/job-role-path",
+            _type=f"{__root_category__}.AcademyJobRolePath",
+            category=f"{__root_category__}/academy/job-role-path",
             **__default_metadata__
         )
         self.cost = None
@@ -281,8 +280,9 @@ class LabStartingPoint(HtvExercise):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.stp",
-            categories=f"{__root_category__}/lab/starting-point",
+            # _type=f"{__root_category__}.{Templater.class_str(self)}",
+            _type=f"{__root_category__}.LabStartingPoint",
+            category=f"{__root_category__}/lab/starting-point",
             **__default_metadata__
         )
 
@@ -298,8 +298,8 @@ class LabMachine(HtvExercise):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.mch",
-            categories=f"{__root_category__}/lab/machine",
+            _type=f"{__root_category__}.LabMachine",
+            category=f"{__root_category__}/lab/machine",
             **__default_metadata__
         )
 
@@ -311,8 +311,8 @@ class LabChallenge(HtvExercise):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.chl",
-            categories=f"{__root_category__}/lab/challenge",
+            _type=f"{__root_category__}.LabChallenge",
+            category=f"{__root_category__}/lab/challenge",
             **__default_metadata__
         )
         self.metadata.logo = 'https://app.hackthebox.com/images/logos/htb_ic2.svg'
@@ -321,8 +321,8 @@ class LabSherlock(HtvExercise):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.shr",
-            categories=f"{__root_category__}/lab/sherlock",
+            _type=f"{__root_category__}.LabSherlock",
+            category=f"{__root_category__}/lab/sherlock",
             **__default_metadata__
         )
 
@@ -334,8 +334,8 @@ class LabTrack(HtvPath):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.trk",
-            categories=f"{__root_category__}/lab/track",
+            _type=f"{__root_category__}.LabTrack",
+            category=f"{__root_category__}/lab/track",
             **__default_metadata__
         )
 
@@ -343,8 +343,8 @@ class LabProLab(HtvExercise):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.lab",
-            categories=f"{__root_category__}/lab/pro-lab",
+            _type=f"{__root_category__}.LabProLab",
+            category=f"{__root_category__}/lab/pro-lab",
             **__default_metadata__
         )
         self.entry_point = None
@@ -364,66 +364,68 @@ class LabProLab(HtvExercise):
 
     def __dir_struct__(self, *args) -> list:
         # Add custom files here
+        args = list(args)
+        for m in self.targets:
+            args.extend([
+                self.path / f'targets/{m.name}/evidences/screenshots',
+                (self.path / f'targets/{m.name}/README.md', 't:exercise.md', dict(resource=m))
+            ])
         return super().__dir_struct__(
             ('README.md', 't:prolab.md', dict(resource=self)),
             *args
         )
 
-    def makedirs(self) -> None:
-        """Creates the dir structure for this ProLabMachine within the configured vault
-
-        :return: None
-        """
-        super().makedirs()
-        for m in self.targets:
-            FsTools.dump_files([
-                Path('evidences/screenshots'),
-                ('README.md', 't:exercise.md', dict(resource=m))
-            ], root_dir=self.path / f'targets/{m.name}')
+    # def makedirs(self) -> None:
+    #     """Creates the dir structure for this ProLabMachine within the configured vault
+    #
+    #     :return: None
+    #     """
+    #     super().makedirs()
+        # for m in self.targets:
+        #     FsTools.dump_files([
+        #         Path('evidences/screenshots'),
+        #         ('README.md', 't:exercise.md', dict(resource=m))
+        #     ], root_dir=self.path / f'targets/{m.name}')
 
 class LabFortress(HtvExercise):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.ftr",
-            categories=f"{__root_category__}/lab/fortress",
+            _type=f"{__root_category__}.LabFortress",
+            category=f"{__root_category__}/lab/fortress",
             **__default_metadata__
         )
 
-class LabBattleground(HtvExercise):
-    """Class representing a Battleground in the HTB lab
+# class LabBattleground(HtvExercise):
+#     """Class representing a Battleground in the HTB lab
+#
+#     :raise NotImplementedError
+#     """
+#
+#     def __init__(self):
+#         super().__init__(
+#             _type=f"{__root_category__}.LabBattleground",
+#             category=f"{__root_category__}/lab/battleground",
+#             **__default_metadata__
+#         )
+#         # TODO: parser not implemented
 
-    :raise NotImplementedError
-    """
-
-    def __init__(self):
-        super().__init__(
-            _type=f"{__root_category__}.btg",
-            categories=f"{__root_category__}/lab/battleground",
-            **__default_metadata__
-        )
-        # TODO: parser not implemented
+def LabBattleground() -> HtvExercise:
+    return HtvExercise(
+        _type=f"{__root_category__}.LabBattleground",
+        category=f"{__root_category__}/lab/battleground",
+        **__default_metadata__
+    )
 
 #######  D S   V A U L T  ####################
 
 # Template
-class Vault(HtvVault):
-    __resources__ = [
-        AcademyModule, AcademySkillPath, AcademyJobRolePath,
-        LabStartingPoint, LabMachine, LabChallenge, LabSherlock,
-        LabTrack, LabProLab, LabFortress, LabBattleground, Vpn
-    ]
-
-    def __init__(self):
-        super().__init__(__root_category__)
-
-    def __dir_struct__(self) -> list:
-        return [
-            # ('README.txt', 'Description of this vault\n'),
-            ('vpn/README.txt', 'Download VPN conf file (.ovpn extension) from HTB page \n'),
-            (self.path / 'ctf')
-        ]
-
+Vault = HtvVault(
+    AcademyModule, AcademySkillPath, AcademyJobRolePath,
+    LabStartingPoint, LabMachine, LabChallenge, LabSherlock,
+    LabTrack, LabProLab, LabFortress, LabBattleground, Vpn,
+    path=__root_category__,
+)
 
 #######  C L I   P A R S E R S  ####################
 

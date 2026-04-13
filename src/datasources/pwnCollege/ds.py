@@ -22,8 +22,8 @@ class Module(HtvModule):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.mod",
-            categories=f"{__root_category__}/module",
+            _type=f"{__root_category__}.Module",
+            category=f"{__root_category__}/module",
             **__default_metadata__
         )
 
@@ -32,25 +32,14 @@ class Dojo(HtvPath):
 
     def __init__(self):
         super().__init__(
-            _type=f"{__root_category__}.dojo",
-            categories=f"{__root_category__}/dojo",
+            _type=f"{__root_category__}.Dojo",
+            category=f"{__root_category__}/dojo",
             **__default_metadata__
         )
 
 
 # Template
-class Vault(HtvVault):
-    __resources__ = [
-        Module,
-        Dojo
-    ]
-
-    def __init__(self):
-        super().__init__(__root_category__)
-
-    def __dir_struct__(self, *args) -> list:
-        # return super().__dir_struct__(
-        #     # Custom files here
-        #     *args
-        # )
-        return []
+Vault = HtvVault(
+    Module, Dojo,
+    path=__root_category__
+)

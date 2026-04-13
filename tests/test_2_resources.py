@@ -13,13 +13,13 @@ class TestDataSources:
         assert htv.DataSources.get('none-category') is None
 
     def test_get_all(self):
-        assert len(htv.DataSources.get('all')) == 3
+        assert len(htv.DataSources.get('all')) == 2
 
     def test_get_category(self):
         assert isinstance(htv.DataSources.get('htb'), htv.HtvVault)
 
     def test_get_resource(self):
-        assert isinstance(htv.DataSources.get('htb.mod'), htv.HtvResource)
+        assert isinstance(htv.DataSources.get('htb.AcademyModule'), htv.HtvResource)
 
     @pytest.mark.parametrize('path', sorted((Path(__file__).parent / 'fixtures').glob('[0-9]*')))
     def test_load(self, path):
@@ -35,7 +35,7 @@ class TestVault:
     # vault = None
     @pytest.fixture(scope='class', name='vault')
     def init_vault(self):
-        return htv.HtvVault(TEST_VAULT_DIR)
+        return htv.HtvVault(path=TEST_VAULT_DIR)
     # vault.add_resources()
     # vault.add('htb')
 
@@ -62,29 +62,30 @@ class TestVault:
     def test_add_resource(self, path, vault, monkeypatch):
         monkeypatch.setattr('builtins.input', lambda _: "skip")
 
-        with open(path, 'r') as file:
-            res = htv.DataSources.load(file.read())  # Deserialize resource
+        res = htv.DataSources.load(path)  # Deserialize resource
         vault.add_resources(res) # Add resources to the vault
         if isinstance(res, htv.HtvResource):
-            assert res.path.exists()
+
+            assert res.path.exists() and res.categories[0] == 'htb'
         else:  # HtbPaths are parsed from lists
             for _ in res:
-                assert isinstance(_, htv.HtvResource) and _.path.exists()
+                assert isinstance(_, htv.HtvResource) and _.path.exists() and _.categories[0] == 'htb'
 
     def test_list_all(self, vault):
-        assert len(vault.list_resources('all')) == 3
+        # Number of resources created equals number of fixture files
+        assert len(vault.list_resources('all')) == len(list((Path(__file__).parent / 'fixtures').glob('*')))
 
     def test_list_no_results(self, vault):
-        assert len(vault.list_resources('none')) == 0
+        assert vault.list_resources('none') is None
 
     def test_list_filtering_no_results(self, vault):
-        assert len(vault.list_resources('htb/academy/module', regex='random')) == 0
+        assert vault.list_resources('htb/academy/module', regex='random') is None
 
     def test_list_filtering_one_results(self, vault):
-        assert len(vault.list_resources('htb/academy/module', regex='javascript-deobfuscation')) == 1
+        assert len(vault.list_resources('htb/academy/module', regex='java')) == 1
 
     def test_list_filtering_many_results(self, vault):
-        assert len(vault.list_resources('all', regex='e')) == 2
+        assert len(vault.list_resources('all', regex='e')) == 8
 
     def test_list_by_category(self, vault):
         # Run this test after all other list_resources() test. Cache needs to be set up for next test

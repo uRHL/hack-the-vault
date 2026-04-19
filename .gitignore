@@ -18,3 +18,6 @@ tests/coverage-report
 
 remote.git
 *venv/
+**/__pycache__/
+.pytest_cache/
+**/.pytest_cache/
